@@ -122,9 +122,9 @@
 /* -------- PHASE 1 -------- */
 
 const characters = [
-"Soma_Thomas.jpg",
+"soma_toma.jpg",
 "Sahir.jpg",
-"Raikuro.jpg",
+"Seikuro.jpg",
 "Tatsumaki.jpg",
 "Shu.jpg"
 ];
@@ -145,7 +145,7 @@ cards.forEach(img=>{
     card.innerHTML=`
         <div class="memory-inner">
             <div class="face">
-                <img src="images/Card_Back.jpg">
+                <img src="images/card_Back.jpg">
             </div>
             <div class="back">
                 <img src="images/${img}">
@@ -194,7 +194,7 @@ function startPhase2(){
     assignmentZone.classList.add("assignment-zone");
 
     const targets=[
-        {name:"Soma & Thomas",img:"Soma_Thomas.jpg"},
+        {name:"Soma & Thomas",img:"soma_toma.jpg"},
         {name:"Sahir",img:"Sahir.jpg"},
         {name:"Raikuro",img:"Raikuro.jpg"},
         {name:"Tatsumaki",img:"Tatsumaki.jpg"}
@@ -232,7 +232,7 @@ function startPhase2(){
         card.innerHTML=`
             <div class="shuffle-inner">
                 <div class="face">
-                    <img src="images/Card_Back.jpg">
+                    <img src="images/card_Back.jpg">
                 </div>
                 <div class="back">
                     <img src="images/${t.img}">
