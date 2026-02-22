@@ -7,25 +7,22 @@
 </head>
 <body>
 
-    <div class="background-overlay"></div>
+<div class="login-container">
+    <h1>LES FOSSOYEURS</h1>
+    <p class="subtitle">Réseau Interne Sécurisé</p>
 
-    <div class="login-container">
-        <h1>LES FOSSOYEURS</h1>
-        <p class="subtitle">Réseau Interne Sécurisé</p>
+    <form id="loginForm">
+        <input type="password" id="password" placeholder="Clé d'Accès Unique" required>
+        <button type="submit">AUTHENTIFIER</button>
+    </form>
 
-        <form>
-            <input type="text" placeholder="Identifiant Cellule" required>
-            <input type="password" placeholder="Clé d'Accès" required>
-            <input type="text" placeholder="Signature Directionnelle" required>
+    <p id="error" class="error-message"></p>
 
-            <button type="submit">AUTHENTIFIER</button>
-        </form>
+    <p class="warning">
+        Accès réservé aux cellules autorisées.
+    </p>
+</div>
 
-        <p class="warning">
-            Accès strictement réservé aux cellules autorisées.<br>
-            Toute tentative externe sera archivée.
-        </p>
-    </div>
-
+<script src="script.js"></script>
 </body>
 </html>
