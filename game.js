@@ -7,7 +7,7 @@ const size = 15;
 let level = 1;
 let hasDocument = false;
 let gameState = "playing";
-let animationFrame = 0;
+let anim = 0;
 
 const dungeon = [
 "###############",
@@ -30,33 +30,42 @@ const dungeon = [
 let player, documentItem, exitDoor, enemies;
 
 function initLevel() {
-    player = { x: 1, y: 1, step: 0 };
+    player = { x: 1, y: 1 };
     documentItem = { x: 13, y: 1 };
     exitDoor = { x: 13, y: 13 };
     hasDocument = false;
     gameState = "playing";
 
-    enemies = [
-        createMatriarche([
-            {x:3,y:1},{x:11,y:1},{x:11,y:7},{x:3,y:7}
-        ]),
-        ...(level >= 2 ? [createMatriarche([
+    enemies = [];
+
+    // Matriarche 1 – boucle carrée centrale
+    enemies.push(createMatriarche([
+        {x:3,y:1},{x:11,y:1},{x:11,y:7},{x:3,y:7}
+    ], 2));
+
+    if(level >= 2){
+        // Matriarche 2 – couloir bas
+        enemies.push(createMatriarche([
             {x:5,y:9},{x:9,y:9},{x:9,y:13},{x:5,y:13}
-        ])] : []),
-        ...(level >= 3 ? [createMatriarche([
+        ], 2.5));
+    }
+
+    if(level >= 3){
+        // Matriarche 3 – passage horizontal critique
+        enemies.push(createMatriarche([
             {x:1,y:5},{x:13,y:5}
-        ])] : [])
-    ];
+        ], 3));
+    }
 }
 
-function createMatriarche(path){
+function createMatriarche(path, speed){
     return {
         x:path[0].x,
         y:path[0].y,
         path:path,
         target:1,
-        dir:{x:1,y:0},
-        speed:0.08 + level*0.02
+        speed:speed * 0.05,
+        vision:1.2 // zone de détection (en cases)
     };
 }
 
@@ -68,10 +77,12 @@ function drawMap(){
     dungeon.forEach((row,y)=>{
         row.split("").forEach((cell,x)=>{
             if(cell==="#"){
-                ctx.fillStyle="#2d2a26";
+                ctx.fillStyle="#3b332c";
                 ctx.fillRect(x*tile,y*tile,tile,tile);
+                ctx.strokeStyle="#2a241f";
+                ctx.strokeRect(x*tile,y*tile,tile,tile);
             }else{
-                ctx.fillStyle="#12100e";
+                ctx.fillStyle="#1a1714";
                 ctx.fillRect(x*tile,y*tile,tile,tile);
             }
         });
@@ -82,14 +93,14 @@ function drawPlayer(){
     const px = player.x*tile+10;
     const py = player.y*tile+10;
 
-    ctx.fillStyle="#f4f1e8";
+    ctx.fillStyle="#f0ede6";
     ctx.beginPath();
     ctx.arc(px+12,py+8,6,0,Math.PI*2);
     ctx.fill();
 
     ctx.fillRect(px+8,py+14,8,14);
 
-    if(animationFrame%20<10){
+    if(anim%20<10){
         ctx.fillRect(px+6,py+26,4,6);
         ctx.fillRect(px+14,py+26,4,6);
     }else{
@@ -103,17 +114,17 @@ function drawDocument(){
         const px = documentItem.x*tile+12;
         const py = documentItem.y*tile+12;
 
-        ctx.fillStyle="#e8e2cf";
+        ctx.fillStyle="#e8e0c8";
         ctx.fillRect(px,py,16,20);
 
-        ctx.fillStyle="#aaa";
+        ctx.fillStyle="#b0a890";
         ctx.fillRect(px+3,py+5,10,2);
         ctx.fillRect(px+3,py+10,10,2);
     }
 }
 
 function drawExit(){
-    ctx.fillStyle="#3a5f3a";
+    ctx.fillStyle="#2f5e3b";
     ctx.fillRect(exitDoor.x*tile+8,exitDoor.y*tile+8,24,24);
 }
 
@@ -121,22 +132,20 @@ function drawMatriarche(e){
     const px = e.x*tile+10;
     const py = e.y*tile+10;
 
-    ctx.fillStyle="#0f0f0f";
+    // robe
+    ctx.fillStyle="#101010";
     ctx.fillRect(px+6,py+14,12,18);
 
-    ctx.fillStyle="#bbb";
+    // tête
+    ctx.fillStyle="#bdbdbd";
     ctx.beginPath();
     ctx.arc(px+12,py+8,6,0,Math.PI*2);
     ctx.fill();
 
-    drawVisionCone(e);
-}
-
-function drawVisionCone(e){
-    ctx.fillStyle="rgba(255,0,0,0.08)";
+    // zone détection
+    ctx.fillStyle="rgba(200,0,0,0.15)";
     ctx.beginPath();
-    ctx.moveTo(e.x*tile+20,e.y*tile+20);
-    ctx.arc(e.x*tile+20,e.y*tile+20,80,0,Math.PI*2);
+    ctx.arc(e.x*tile+20,e.y*tile+20,tile*e.vision,0,Math.PI*2);
     ctx.fill();
 }
 
@@ -159,26 +168,16 @@ function moveEnemies(){
             e.target = (e.target+1)%e.path.length;
         }
 
+        // détection zone
         const dist = Math.hypot(e.x-player.x,e.y-player.y);
-        if(dist<0.6){
+        if(dist < e.vision){
             initLevel();
         }
     });
 }
 
-function drawFog(){
-    ctx.fillStyle="rgba(0,0,0,0.85)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    ctx.globalCompositeOperation="destination-out";
-    ctx.beginPath();
-    ctx.arc(player.x*tile+20,player.y*tile+20,100,0,Math.PI*2);
-    ctx.fill();
-    ctx.globalCompositeOperation="source-over";
-}
-
 function drawHUD(){
-    ctx.fillStyle="#999";
+    ctx.fillStyle="#aaa";
     ctx.font="16px monospace";
     ctx.fillText("NIVEAU "+level,20,20);
 }
@@ -187,7 +186,7 @@ function drawVictory(){
     ctx.fillStyle="rgba(0,0,0,0.7)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillStyle="#e8e2cf";
+    ctx.fillStyle="#e8e0c8";
     ctx.font="40px monospace";
     ctx.fillText("VALIDATION",150,250);
     ctx.fillText("ACCEPTÉE",150,300);
@@ -218,13 +217,11 @@ function update(){
         }
     }
 
-    drawFog();
-
     if(gameState==="win"){
         drawVictory();
     }
 
-    animationFrame++;
+    anim++;
 }
 
 document.addEventListener("keydown",e=>{
