@@ -345,13 +345,31 @@ function checkCompletion(){
             window.location.href="enfants.html";
         },1000);
     }else{
+
+        // Animation rouge
         slots.forEach(s=>s.style.border="1px solid #8b0000");
+
         setTimeout(()=>{
-            startPhase2();
+            resetPhase2();
         },1200);
     }
 }
 
+function resetPhase2(){
+
+    const container=document.querySelector(".memory-container");
+
+    // Supprimer ancienne phase 2
+    const oldAssignment=document.querySelector(".assignment-zone");
+    const oldCards=document.querySelector(".cards-zone");
+
+    if(oldAssignment) oldAssignment.remove();
+    if(oldCards) oldCards.remove();
+
+    // Relancer proprement la phase 2
+    startPhase2();
+}    
+    
 </script>
 
 </body>
