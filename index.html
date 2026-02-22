@@ -5,23 +5,56 @@
 <title>Le Terrier</title>
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="centered-page">
 
 <div class="login-container">
 
 <h1>LE TERRIER</h1>
-<p class="subtitle">ACCÈS RÉSERVÉ — RÉSEAU FOSSOYEURS</p>
+<p class="subtitle">ACCÈS RESTREINT — CLÉ REQUISE</p>
 
-<form onsubmit="event.preventDefault(); window.location.href='game.html';">
+<form id="loginForm">
 
-<input type="text" placeholder="IDENTIFIANT">
-<input type="password" placeholder="CLÉ D'ACCÈS">
+<input 
+    type="password" 
+    id="accessKey" 
+    placeholder="CLÉ D'ACCÈS"
+    autocomplete="off"
+>
 
 <button type="submit">VALIDER</button>
+
+<p id="errorMessage" style="color:#8b0000; font-size:11px; margin-top:15px; display:none;">
+Clé invalide.
+</p>
 
 </form>
 
 </div>
+
+<script>
+
+const VALID_KEY = "fossoyeurs"; 
+// 🔐 Change ici le mot de passe si tu veux
+
+document.getElementById("loginForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const enteredKey = document.getElementById("accessKey").value;
+
+    if(enteredKey === VALID_KEY){
+        window.location.href = "dashboard.html";
+    } else {
+        const error = document.getElementById("errorMessage");
+        error.style.display = "block";
+
+        setTimeout(()=>{
+            error.style.display = "none";
+        },2000);
+    }
+});
+
+</script>
 
 </body>
 </html>
