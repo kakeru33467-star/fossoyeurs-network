@@ -2,21 +2,22 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 const tile = 40;
-
 let level = 1;
 let hasDocument = false;
 let gameState = "playing";
 let anim = 0;
 
-const dungeon = [
+const levels = [
+{
+map: [
 "###############",
-"#.....#...#...#",
-"#.###.#.#.#.#.#",
-"#.#...#.#...#.#",
-"#.#.###.#####.#",
-"#...#.....#...#",
-"###.#.###.#.###",
-"#...#.#...#...#",
+"#.....#.......#",
+"#.###.#.#####.#",
+"#.#...#.....#.#",
+"#.#.#######.#.#",
+"#...#.....#.#.#",
+"###.#.###.#...#",
+"#...#.#...#.#.#",
 "#.###.#.###.#.#",
 "#.....#.....#.#",
 "#.#####.#####.#",
@@ -24,50 +25,91 @@ const dungeon = [
 "#.#####.#.###.#",
 "#.....#...#...#",
 "###############"
+],
+player:{x:1,y:1},
+doc:{x:13,y:1},
+exit:{x:13,y:13},
+enemies:[
+{path:[{x:3,y:1},{x:11,y:1},{x:11,y:9},{x:3,y:9}], speed:400}
+]
+},
+
+{
+map: [
+"###############",
+"#...#.....#...#",
+"#.#.#.###.#.#.#",
+"#.#...#...#.#.#",
+"#.#####.#.###.#",
+"#.....#.#.....#",
+"###.#.#.#####.#",
+"#...#.#.......#",
+"#.###.#######.#",
+"#.....#.....#.#",
+"#.#####.###.#.#",
+"#.......#.#...#",
+"#.#####.#.#.###",
+"#.....#...#...#",
+"###############"
+],
+player:{x:1,y:13},
+doc:{x:13,y:1},
+exit:{x:1,y:1},
+enemies:[
+{path:[{x:3,y:3},{x:11,y:3},{x:11,y:11},{x:3,y:11}], speed:300},
+{path:[{x:7,y:1},{x:7,y:13}], speed:250}
+]
+},
+
+{
+map: [
+"###############",
+"#.#.....#.....#",
+"#.#.###.#.###.#",
+"#...#...#...#.#",
+"###.#.#####.#.#",
+"#...#.#.....#.#",
+"#.###.#.#####.#",
+"#.....#.#.....#",
+"#.#####.#.###.#",
+"#.....#.#...#.#",
+"#.###.#.###.#.#",
+"#.#...#...#.#.#",
+"#.#.#####.#.#.#",
+"#...........#.#",
+"###############"
+],
+player:{x:1,y:1},
+doc:{x:13,y:13},
+exit:{x:13,y:1},
+enemies:[
+{path:[{x:1,y:7},{x:13,y:7}], speed:200},
+{path:[{x:7,y:1},{x:7,y:13}], speed:180},
+{path:[{x:3,y:3},{x:11,y:11}], speed:150}
+]
+}
 ];
 
-let player, documentItem, exitDoor, enemies;
+let dungeon, player, documentItem, exitDoor, enemies;
 
-function initLevel() {
-    player = { x: 1, y: 1 };
-    documentItem = { x: 13, y: 1 };
-    exitDoor = { x: 13, y: 13 };
+function loadLevel(){
+    const lvl = levels[level-1];
+
+    dungeon = lvl.map;
+    player = {...lvl.player};
+    documentItem = {...lvl.doc};
+    exitDoor = {...lvl.exit};
     hasDocument = false;
-    gameState = "playing";
 
-    enemies = [];
-
-    // Boucle centrale carrée
-    enemies.push(createMatriarche([
-        {x:3,y:1},{x:11,y:1},
-        {x:11,y:9},{x:3,y:9}
-    ], 600));
-
-    if(level >= 2){
-        // Patrouille verticale
-        enemies.push(createMatriarche([
-            {x:7,y:1},{x:7,y:13}
-        ], 500));
-    }
-
-    if(level >= 3){
-        // Patrouille horizontale critique
-        enemies.push(createMatriarche([
-            {x:1,y:7},{x:13,y:7}
-        ], 450));
-    }
-}
-
-function createMatriarche(path, delay){
-    return {
-        x:path[0].x,
-        y:path[0].y,
-        path:path,
+    enemies = lvl.enemies.map(e => ({
+        x:e.path[0].x,
+        y:e.path[0].y,
+        path:e.path,
         target:1,
-        delay:delay,
+        speed:e.speed,
         timer:0,
-        vision:1.5
-    };
+        vision:1.3
+    }));
 }
 
 function isWall(x,y){
@@ -133,7 +175,7 @@ function drawMatriarche(e){
     const px = e.x*tile+10;
     const py = e.y*tile+10;
 
-    ctx.fillStyle="#101010";
+    ctx.fillStyle="#111";
     ctx.fillRect(px+6,py+14,12,18);
 
     ctx.fillStyle="#bdbdbd";
@@ -150,8 +192,7 @@ function drawMatriarche(e){
 function moveEnemies(delta){
     enemies.forEach(e=>{
         e.timer += delta;
-
-        if(e.timer >= e.delay){
+        if(e.timer >= e.speed){
             e.timer = 0;
 
             const target = e.path[e.target];
@@ -168,7 +209,7 @@ function moveEnemies(delta){
 
         const dist = Math.hypot(e.x-player.x,e.y-player.y);
         if(dist < e.vision){
-            initLevel();
+            loadLevel();
         }
     });
 }
@@ -182,20 +223,20 @@ function drawHUD(){
 function drawVictory(){
     ctx.fillStyle="rgba(0,0,0,0.7)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
-
     ctx.fillStyle="#e8e0c8";
     ctx.font="40px monospace";
     ctx.fillText("VALIDATION",150,250);
     ctx.fillText("ACCEPTÉE",150,300);
 }
 
-let lastTime = 0;
+let lastTime=0;
 
 function update(timestamp){
     const delta = timestamp - lastTime;
     lastTime = timestamp;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
+
     drawMap();
     drawDocument();
     drawExit();
@@ -215,7 +256,7 @@ function update(timestamp){
             gameState="win";
             setTimeout(()=>window.location.href="dashboard.html",2000);
         }else{
-            initLevel();
+            loadLevel();
         }
     }
 
@@ -248,5 +289,5 @@ document.addEventListener("keydown",e=>{
     }
 });
 
-initLevel();
+loadLevel();
 requestAnimationFrame(update);
