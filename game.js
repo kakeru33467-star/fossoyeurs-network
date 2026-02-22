@@ -1,100 +1,116 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const tile = 40;
+const tile = 30; // plus petit pour map 20x20
 let level = 1;
 let hasDocument = false;
 let gameState = "playing";
 let anim = 0;
 
 const levels = [
+
 {
-map: [
-"###############",
-"#.....#.......#",
-"#.###.#.#####.#",
-"#.#...#.....#.#",
-"#.#.#######.#.#",
-"#...#.....#.#.#",
-"###.#.###.#...#",
-"#...#.#...#.#.#",
-"#.###.#.###.#.#",
-"#.....#.....#.#",
-"#.#####.#####.#",
-"#.......#.....#",
-"#.#####.#.###.#",
-"#.....#...#...#",
-"###############"
+map:[
+"####################",
+"#......#......#....#",
+"#.####.#.####.#.##.#",
+"#.#....#....#.#....#",
+"#.#.########.#.####.#",
+"#.#........#.#......#",
+"#.######.##.#.######.#",
+"#........##.#........#",
+"########.##.########.#",
+"#........##.#........#",
+"#.######.##.#.######.#",
+"#.#......##.#......#.#",
+"#.#.##############.#.#",
+"#.#.................#.#",
+"#.########.##########.#",
+"#........#.#...........#",
+"#.######.#.#.#########.#",
+"#........#.#...........#",
+"#........#.............#",
+"####################"
 ],
 player:{x:1,y:1},
-doc:{x:13,y:1},
-exit:{x:13,y:13},
+doc:{x:18,y:1},
+exit:{x:18,y:18},
 enemies:[
-{path:[{x:3,y:1},{x:11,y:1},{x:11,y:9},{x:3,y:9}], speed:400}
+{path:[{x:3,y:1},{x:16,y:1},{x:16,y:8},{x:3,y:8}], speed:350}
 ]
 },
 
 {
-map: [
-"###############",
-"#...#.....#...#",
-"#.#.#.###.#.#.#",
-"#.#...#...#.#.#",
-"#.#####.#.###.#",
-"#.....#.#.....#",
-"###.#.#.#####.#",
-"#...#.#.......#",
-"#.###.#######.#",
-"#.....#.....#.#",
-"#.#####.###.#.#",
-"#.......#.#...#",
-"#.#####.#.#.###",
-"#.....#...#...#",
-"###############"
+map:[
+"####################",
+"#....#......#......#",
+"#.##.#.####.#.####.#",
+"#.#..#....#.#.#....#",
+"#.#.######.#.#.#.##.#",
+"#.#......#.#.#.#.#..#",
+"#.######.#.#.#.#.#.##",
+"#......#.#.#.#.#.#..#",
+"######.#.#.#.#.#.####",
+"#......#.#.#.#.#.....#",
+"#.######.#.#.#.#####.#",
+"#........#.#.#.......#",
+"#.########.#.#########",
+"#..........#.........#",
+"#.##########.#########",
+"#.............#......#",
+"#.#############.####.#",
+"#...............#....#",
+"#...............#....#",
+"####################"
 ],
-player:{x:1,y:13},
-doc:{x:13,y:1},
+player:{x:1,y:18},
+doc:{x:18,y:1},
 exit:{x:1,y:1},
 enemies:[
-{path:[{x:3,y:3},{x:11,y:3},{x:11,y:11},{x:3,y:11}], speed:300},
-{path:[{x:7,y:1},{x:7,y:13}], speed:250}
+{path:[{x:3,y:3},{x:16,y:3},{x:16,y:15},{x:3,y:15}], speed:280},
+{path:[{x:10,y:1},{x:10,y:18}], speed:240}
 ]
 },
 
 {
-map: [
-"###############",
-"#.#.....#.....#",
-"#.#.###.#.###.#",
-"#...#...#...#.#",
-"###.#.#####.#.#",
-"#...#.#.....#.#",
-"#.###.#.#####.#",
-"#.....#.#.....#",
-"#.#####.#.###.#",
-"#.....#.#...#.#",
-"#.###.#.###.#.#",
-"#.#...#...#.#.#",
-"#.#.#####.#.#.#",
-"#...........#.#",
-"###############"
+map:[
+"####################",
+"#.#........#.......#",
+"#.#.######.#.#####.#",
+"#.#.#....#.#.#...#.#",
+"#.#.#.##.#.#.#.#.#.#",
+"#...#.#..#.#.#.#.#.#",
+"###.#.#.##.#.#.#.#.#",
+"#...#.#....#.#.#.#.#",
+"#.###.######.#.#.#.#",
+"#.....#......#.#.#.#",
+"#.#####.######.#.#.#",
+"#.#.....#......#.#.#",
+"#.#.#####.######.#.#",
+"#.#.#.....#........#",
+"#.#.#.#####.########",
+"#.#.#.#.....#......#",
+"#.#.#.#.#####.####.#",
+"#...#.#.......#....#",
+"#.....#########....#",
+"####################"
 ],
 player:{x:1,y:1},
-doc:{x:13,y:13},
-exit:{x:13,y:1},
+doc:{x:18,y:18},
+exit:{x:18,y:1},
 enemies:[
-{path:[{x:1,y:7},{x:13,y:7}], speed:200},
-{path:[{x:7,y:1},{x:7,y:13}], speed:180},
-{path:[{x:3,y:3},{x:11,y:11}], speed:150}
+{path:[{x:1,y:9},{x:18,y:9}], speed:200},
+{path:[{x:9,y:1},{x:9,y:18}], speed:180},
+{path:[{x:3,y:3},{x:16,y:16}], speed:160}
 ]
 }
+
 ];
 
 let dungeon, player, documentItem, exitDoor, enemies;
 
 function loadLevel(){
     const lvl = levels[level-1];
-
     dungeon = lvl.map;
     player = {...lvl.player};
     documentItem = {...lvl.doc};
@@ -108,7 +124,7 @@ function loadLevel(){
         target:1,
         speed:e.speed,
         timer:0,
-        vision:1.3
+        vision:1.2
     }));
 }
 
@@ -122,8 +138,6 @@ function drawMap(){
             if(cell==="#"){
                 ctx.fillStyle="#3b332c";
                 ctx.fillRect(x*tile,y*tile,tile,tile);
-                ctx.strokeStyle="#2a241f";
-                ctx.strokeRect(x*tile,y*tile,tile,tile);
             }else{
                 ctx.fillStyle="#1a1714";
                 ctx.fillRect(x*tile,y*tile,tile,tile);
@@ -133,59 +147,47 @@ function drawMap(){
 }
 
 function drawPlayer(){
-    const px = player.x*tile+10;
-    const py = player.y*tile+10;
+    const px = player.x*tile+5;
+    const py = player.y*tile+5;
 
     ctx.fillStyle="#f0ede6";
     ctx.beginPath();
-    ctx.arc(px+12,py+8,6,0,Math.PI*2);
+    ctx.arc(px+10,py+6,5,0,Math.PI*2);
     ctx.fill();
 
-    ctx.fillRect(px+8,py+14,8,14);
-
-    if(anim%20<10){
-        ctx.fillRect(px+6,py+26,4,6);
-        ctx.fillRect(px+14,py+26,4,6);
-    }else{
-        ctx.fillRect(px+8,py+26,4,6);
-        ctx.fillRect(px+12,py+26,4,6);
-    }
+    ctx.fillRect(px+7,py+10,6,12);
 }
 
 function drawDocument(){
     if(!hasDocument){
-        const px = documentItem.x*tile+12;
-        const py = documentItem.y*tile+12;
+        const px = documentItem.x*tile+7;
+        const py = documentItem.y*tile+5;
 
         ctx.fillStyle="#e8e0c8";
-        ctx.fillRect(px,py,16,20);
-
-        ctx.fillStyle="#b0a890";
-        ctx.fillRect(px+3,py+5,10,2);
-        ctx.fillRect(px+3,py+10,10,2);
+        ctx.fillRect(px,py,12,16);
     }
 }
 
 function drawExit(){
     ctx.fillStyle="#2f5e3b";
-    ctx.fillRect(exitDoor.x*tile+8,exitDoor.y*tile+8,24,24);
+    ctx.fillRect(exitDoor.x*tile+5,exitDoor.y*tile+5,20,20);
 }
 
 function drawMatriarche(e){
-    const px = e.x*tile+10;
-    const py = e.y*tile+10;
+    const px = e.x*tile+5;
+    const py = e.y*tile+5;
 
     ctx.fillStyle="#111";
-    ctx.fillRect(px+6,py+14,12,18);
+    ctx.fillRect(px+5,py+10,10,15);
 
     ctx.fillStyle="#bdbdbd";
     ctx.beginPath();
-    ctx.arc(px+12,py+8,6,0,Math.PI*2);
+    ctx.arc(px+10,py+6,5,0,Math.PI*2);
     ctx.fill();
 
     ctx.fillStyle="rgba(200,0,0,0.15)";
     ctx.beginPath();
-    ctx.arc(e.x*tile+20,e.y*tile+20,tile*e.vision,0,Math.PI*2);
+    ctx.arc(e.x*tile+15,e.y*tile+15,tile*e.vision,0,Math.PI*2);
     ctx.fill();
 }
 
@@ -214,21 +216,6 @@ function moveEnemies(delta){
     });
 }
 
-function drawHUD(){
-    ctx.fillStyle="#aaa";
-    ctx.font="16px monospace";
-    ctx.fillText("NIVEAU "+level,20,20);
-}
-
-function drawVictory(){
-    ctx.fillStyle="rgba(0,0,0,0.7)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="#e8e0c8";
-    ctx.font="40px monospace";
-    ctx.fillText("VALIDATION",150,250);
-    ctx.fillText("ACCEPTÉE",150,300);
-}
-
 let lastTime=0;
 
 function update(timestamp){
@@ -242,7 +229,6 @@ function update(timestamp){
     drawExit();
     drawPlayer();
     enemies.forEach(drawMatriarche);
-    drawHUD();
 
     moveEnemies(delta);
 
@@ -253,18 +239,12 @@ function update(timestamp){
     if(player.x===exitDoor.x && player.y===exitDoor.y && hasDocument){
         level++;
         if(level>3){
-            gameState="win";
-            setTimeout(()=>window.location.href="dashboard.html",2000);
+            setTimeout(()=>window.location.href="dashboard.html",1500);
         }else{
             loadLevel();
         }
     }
 
-    if(gameState==="win"){
-        drawVictory();
-    }
-
-    anim++;
     requestAnimationFrame(update);
 }
 
