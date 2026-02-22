@@ -184,7 +184,7 @@ cards.forEach(img=>{
 function startPhase2(){
 
     document.querySelector("h1").innerText="RECONSTITUTION IDENTITAIRE";
-    document.querySelector(".subtitle").innerText="Mémorisez les positions";
+    document.querySelector(".subtitle").innerText="Suivez les cartes attentivement";
 
     grid.remove();
 
@@ -194,9 +194,9 @@ function startPhase2(){
     assignmentZone.classList.add("assignment-zone");
 
     const targets=[
-        {name:"Soma & Thomas",img:"soma_toma.jpg"},
+        {name:"Soma & Thomas",img:"Soma_Thomas.jpg"},
         {name:"Sahir",img:"Sahir.jpg"},
-        {name:"Raikuro",img:"Reikuro.jpg"},
+        {name:"Raikuro",img:"Raikuro.jpg"},
         {name:"Tatsumaki",img:"Tatsumaki.jpg"}
     ];
 
@@ -219,66 +219,81 @@ function startPhase2(){
 
     const cardsZone=document.createElement("div");
     cardsZone.classList.add("cards-zone");
+    cardsZone.style.position="relative";
+    cardsZone.style.height="200px";
     container.appendChild(cardsZone);
 
     let shuffled=[...targets];
     shuffled.sort(()=>Math.random()-0.5);
 
-    shuffled.forEach(t=>{
+    const positions=[0,180,360,540];
+
+    shuffled.forEach((t,i)=>{
         const card=document.createElement("div");
         card.classList.add("shuffle-card");
-        card.draggable=false;
-
+        card.style.position="absolute";
+        card.style.left=positions[i]+"px";
+        card.style.transition="left 0.6s ease";
         card.innerHTML=`
             <div class="shuffle-inner">
                 <div class="face">
-                    <img src="images/card_back.jpg">
+                    <img src="images/${t.img}">
                 </div>
                 <div class="back">
-                    <img src="images/${t.img}">
+                    <img src="images/Card_Back.jpg">
                 </div>
             </div>
         `;
-
         cardsZone.appendChild(card);
     });
 
-    const shuffleCards=document.querySelectorAll(".shuffle-card");
+    const cards=document.querySelectorAll(".shuffle-card");
 
-    // reveal for memorisation
+    // Étape 1 : laisser visibles 2 secondes
     setTimeout(()=>{
-        shuffleCards.forEach(c=>c.classList.add("revealed"));
-    },800);
 
-    // hide after 3s and enable drag
-    setTimeout(()=>{
-        shuffleCards.forEach(c=>{
-            c.classList.remove("revealed");
-            c.draggable=true;
-            c.addEventListener("dragstart",e=>{
-                const img=c.querySelector(".back img").getAttribute("src").split("/").pop();
-                e.dataTransfer.setData("text",img);
-            });
+        // Étape 2 : retourner face cachée
+        cards.forEach(c=>{
+            c.querySelector(".shuffle-inner").style.transform="rotateY(180deg)";
         });
-    },3500);
-}
 
-function checkCompletion(){
-    const slots=document.querySelectorAll(".drop-slot");
-    let correct=true;
-    slots.forEach(s=>{
-        if(s.dataset.filled!==s.dataset.correct){
-            correct=false;
-        }
-    });
-
-    if(correct){
+        // Étape 3 : mélange façon magicien
         setTimeout(()=>{
-            window.location.href="enfants.html";
-        },1000);
-    }
-}
 
+            let swaps=8;
+            let count=0;
+
+            const shuffleInterval=setInterval(()=>{
+
+                const a=Math.floor(Math.random()*4);
+                let b=Math.floor(Math.random()*4);
+                if(a===b) b=(b+1)%4;
+
+                const temp=cards[a].style.left;
+                cards[a].style.left=cards[b].style.left;
+                cards[b].style.left=temp;
+
+                count++;
+                if(count>=swaps){
+                    clearInterval(shuffleInterval);
+
+                    // Activer drag après mélange
+                    cards.forEach((c,i)=>{
+                        c.draggable=true;
+                        c.addEventListener("dragstart",e=>{
+                            const img=shuffled[i].img;
+                            e.dataTransfer.setData("text",img);
+                        });
+                    });
+
+                }
+
+            },800); // vitesse du mélange (pas trop rapide)
+
+        },800);
+
+    },2000);
+}
 </script>
 
 </body>
