@@ -4,14 +4,13 @@
     box-sizing: border-box;
 }
 
-/* Style global */
 body {
-    background-color: #0b0b0b;
-    font-family: 'Segoe UI', sans-serif;
-    color: #e6e6e6;
+    background: #0a0a0a;
+    font-family: "Courier New", monospace;
+    color: #d0d0d0;
 }
 
-/* Seulement pour la page login */
+/* PAGE LOGIN */
 .centered-page {
     height: 100vh;
     display: flex;
@@ -19,173 +18,141 @@ body {
     align-items: center;
 }
 
-.background-overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at center, #1a1a1a 0%, #0b0b0b 80%);
-    z-index: -1;
-}
-
 .login-container {
-    width: 400px;
+    width: 420px;
     padding: 40px;
-    background-color: rgba(20, 20, 20, 0.85);
-    border: 1px solid #2a2a2a;
-    border-radius: 6px;
-    text-align: center;
-    backdrop-filter: blur(5px);
+    background: #111;
+    border: 1px solid #222;
 }
 
-h1 {
-    letter-spacing: 6px;
-    font-weight: 300;
-    margin-bottom: 10px;
+.login-container h1 {
+    font-size: 22px;
+    letter-spacing: 4px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
 }
 
 .subtitle {
-    font-size: 12px;
-    letter-spacing: 3px;
+    font-size: 11px;
+    color: #666;
     margin-bottom: 30px;
-    color: #888;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
+    letter-spacing: 2px;
 }
 
 input {
-    background-color: #111;
-    border: 1px solid #2c2c2c;
+    background: #0f0f0f;
+    border: 1px solid #222;
     padding: 12px;
     margin-bottom: 15px;
-    color: #e6e6e6;
-    outline: none;
-    transition: 0.3s;
+    color: #ccc;
+    font-family: monospace;
 }
 
 input:focus {
-    border-color: #7a0000;
+    outline: none;
+    border-color: #5c0a0a;
 }
 
 button {
-    background-color: #1a1a1a;
-    border: 1px solid #7a0000;
-    color: #e6e6e6;
+    background: #141414;
+    border: 1px solid #5c0a0a;
+    color: #ccc;
     padding: 12px;
     cursor: pointer;
-    letter-spacing: 2px;
-    transition: 0.3s;
+    font-family: monospace;
+    text-transform: uppercase;
+    font-size: 12px;
 }
 
 button:hover {
-    background-color: #7a0000;
+    background: #1c1c1c;
 }
 
-.warning {
-    font-size: 11px;
-    margin-top: 25px;
-    color: #666;
-}
-
-/* Dashboard */
+/* DASHBOARD */
 .dashboard {
-    padding: 40px;
-    max-width: 1200px;
+    padding: 50px;
+    max-width: 1100px;
     margin: auto;
 }
 
-/* Cartes générales */
-.card {
-    background: #151515;
-    padding: 30px;
-    border: 1px solid #2a2a2a;
-    cursor: pointer;
-    transition: 0.3s;
+.dashboard h1 {
+    font-size: 18px;
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 15px;
 }
 
-.card:hover {
-    border-color: #7a0000;
+/* CARTES */
+.card,
+.target-card {
+    background: #101010;
+    border: 1px solid #1e1e1e;
+    padding: 25px;
+    margin-bottom: 30px;
+    transition: 0.2s;
 }
 
-.locked {
-    filter: blur(2px);
-    opacity: 0.6;
+.card:hover,
+.target-card:hover {
+    border-color: #5c0a0a;
 }
 
-/* Game */
+.target-card {
+    display: flex;
+    gap: 25px;
+}
+
+.target-image {
+    width: 160px;
+    height: 200px;
+    object-fit: cover;
+    filter: grayscale(40%);
+}
+
+.target-info h2 {
+    font-size: 16px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.target-info h3 {
+    font-size: 12px;
+    color: #777;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.target-info p {
+    font-size: 13px;
+    color: #aaa;
+}
+
+.stars {
+    font-size: 14px;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    color: #b33;
+}
+
+.priority-5 {
+    border-color: #5c0a0a;
+}
+
+/* GAME */
 .game-container {
     text-align: center;
     padding-top: 40px;
 }
 
 canvas {
-    border: 2px solid #7a0000;
+    border: 1px solid #5c0a0a;
     display: block;
     margin: 20px auto;
 }
 
 .controls {
-    font-size: 12px;
-    color: #777;
-}
-
-/* Fiches recherchés */
-
-.target-card {
-    display: flex;
-    gap: 30px;
-    background: #151515;
-    padding: 25px;
-    margin-bottom: 30px;
-    border: 1px solid #2a2a2a;
-    transition: 0.3s;
-}
-
-.target-card:hover {
-    border-color: #7a0000;
-}
-
-.target-image {
-    width: 180px;
-    height: 220px;
-    object-fit: cover;
-    border: 1px solid #333;
-}
-
-.target-info h2 {
-    margin-bottom: 10px;
-}
-
-.target-info h3 {
-    margin-top: 15px;
-    font-size: 14px;
-    letter-spacing: 1px;
-    color: #c79a2b;
-}
-
-.target-info p {
-    margin-bottom: 8px;
-    color: #bbb;
-    font-size: 14px;
-}
-
-.stars {
-    font-size: 20px;
-    color: #c79a2b;
-    letter-spacing: 3px;
-    margin-bottom: 5px;
-}
-
-.priority-label {
-    font-size: 12px;
-    letter-spacing: 2px;
-    color: #888;
-    margin-bottom: 15px;
-}
-
-.priority-5 {
-    border-color: #7a0000;
-    box-shadow: 0 0 20px rgba(122,0,0,0.2);
+    font-size: 11px;
+    color: #666;
 }
