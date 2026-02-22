@@ -11,18 +11,18 @@ const levels = [
 {
 map:[
 "###############",
+"#.....#.......#",
+"#.....#.......#",
+"#.....#####...#",
+"###.#######.###",
 "#.............#",
 "#.#####.#####.#",
 "#.#...........#",
 "#.#.#########.#",
-"#.#.#.......#.#",
-"#...#.#####.#.#",
-"###.#.#...#.#.#",
-"#...#.#.#.#.#.#",
-"#.###.#.#.#.#.#",
-"#.....#.#.#...#",
-"#.#####.#.#####",
+"#.#...........#",
+"#.#####.#####.#",
 "#.............#",
+"###.#######.###",
 "#.............#",
 "###############"
 ],
@@ -30,7 +30,7 @@ player:{x:1,y:1},
 doc:{x:13,y:1},
 exit:{x:13,y:13},
 enemies:[
-{path:[{x:3,y:1},{x:11,y:1},{x:11,y:9},{x:3,y:9}], speed:400}
+{path:[{x:5,y:5},{x:9,y:5},{x:9,y:9},{x:5,y:9}], speed:400}
 ]
 },
 
@@ -64,10 +64,10 @@ enemies:[
 {
 map:[
 "###############",
-"#.............#",
-"#.###########.#",
-"#.#...........#",
-"#.#.#########.#",
+"#.....#.......#",
+"#.###.#.#####.#",
+"#.#...#.....#.#",
+"#.#.#######.#.#",
 "#.#.#.......#.#",
 "#...#.#####.#.#",
 "###.#.#...#.#.#",
@@ -122,6 +122,8 @@ function drawMap(){
             if(cell==="#"){
                 ctx.fillStyle="#3b332c";
                 ctx.fillRect(x*tile,y*tile,tile,tile);
+                ctx.strokeStyle="#2a241f";
+                ctx.strokeRect(x*tile,y*tile,tile,tile);
             }else{
                 ctx.fillStyle="#1a1714";
                 ctx.fillRect(x*tile,y*tile,tile,tile);
@@ -140,20 +142,43 @@ function drawPlayer(){
     ctx.fill();
 
     ctx.fillRect(px+8,py+14,8,14);
+
+    if(anim%20<10){
+        ctx.fillRect(px+6,py+26,4,6);
+        ctx.fillRect(px+14,py+26,4,6);
+    }else{
+        ctx.fillRect(px+8,py+26,4,6);
+        ctx.fillRect(px+12,py+26,4,6);
+    }
 }
 
 function drawDocument(){
     if(!hasDocument){
         const px = documentItem.x*tile+12;
         const py = documentItem.y*tile+12;
+
         ctx.fillStyle="#e8e0c8";
         ctx.fillRect(px,py,16,20);
+
+        ctx.fillStyle="#b0a890";
+        ctx.fillRect(px+3,py+5,10,2);
+        ctx.fillRect(px+3,py+10,10,2);
     }
 }
 
 function drawExit(){
+    const px = exitDoor.x*tile+10;
+    const py = exitDoor.y*tile+10;
+
+    // cadre porte
     ctx.fillStyle="#2f5e3b";
-    ctx.fillRect(exitDoor.x*tile+8,exitDoor.y*tile+8,24,24);
+    ctx.fillRect(px,py,20,30);
+
+    // poignée
+    ctx.fillStyle="#d4b35a";
+    ctx.beginPath();
+    ctx.arc(px+15,py+15,3,0,Math.PI*2);
+    ctx.fill();
 }
 
 function drawMatriarche(e){
@@ -227,6 +252,7 @@ function update(timestamp){
         }
     }
 
+    anim++;
     requestAnimationFrame(update);
 }
 
