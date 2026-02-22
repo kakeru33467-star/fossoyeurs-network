@@ -1,28 +1,27 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const tileSize = 20;
+const tile = 20;
+const rows = 28;
+const cols = 28;
 
-const map = [
+let map = [];
+let pellets = [];
+let ghosts = [];
+
+const layout = [
 "############################",
 "#............##............#",
 "#.####.#####.##.#####.####.#",
 "#o####.#####.##.#####.####o#",
-"#.####.#####.##.#####.####.#",
 "#..........................#",
-"#.####.##.########.##.####.#",
 "#.####.##.########.##.####.#",
 "#......##....##....##......#",
 "######.##### ## #####.######",
 "     #.##### ## #####.#     ",
 "     #.##          ##.#     ",
-"     #.## ###GG### ##.#     ",
-"######.## #      # ##.######",
+"######.## ###GG### ##.######",
 "      .   #      #   .      ",
-"######.## #      # ##.######",
-"     #.## ######## ##.#     ",
-"     #.##          ##.#     ",
-"     #.## ######## ##.#     ",
 "######.## ######## ##.######",
 "#............##............#",
 "#.####.#####.##.#####.####.#",
@@ -34,153 +33,147 @@ const map = [
 "############################"
 ];
 
-let pellets = [];
-let ghosts = [];
-
-const pacman = {
-    x: 14,
-    y: 23,
-    dx: 0,
-    dy: 0
-};
-
 function init() {
     pellets = [];
     ghosts = [];
+    map = layout.map(row => row.split(""));
 
-    map.forEach((row, y) => {
-        row.split("").forEach((cell, x) => {
-            if (cell === "." || cell === "o") {
-                pellets.push({x, y});
+    map.forEach((row,y)=>{
+        row.forEach((cell,x)=>{
+            if(cell==="."||cell==="o"){
+                pellets.push({x,y});
             }
-            if (cell === "G") {
+            if(cell==="G"){
                 ghosts.push({
-                    x,
-                    y,
-                    dx: Math.random() < 0.5 ? 1 : -1,
-                    dy: 0
+                    x,y,
+                    dx:1,dy:0,
+                    color:"#555"
                 });
             }
         });
     });
 }
 
-function drawMap() {
-    map.forEach((row, y) => {
-        row.split("").forEach((cell, x) => {
-            if (cell === "#") {
-                ctx.fillStyle = "#111";
-                ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+const child = {
+    x:14,
+    y:15,
+    dx:0,
+    dy:0
+};
+
+function drawWalls(){
+    ctx.fillStyle="#0011aa";
+    map.forEach((row,y)=>{
+        row.forEach((cell,x)=>{
+            if(cell==="#"){
+                ctx.fillRect(x*tile,y*tile,tile,tile);
             }
         });
     });
 }
 
-function drawPellets() {
-    ctx.fillStyle = "#aaa";
-    pellets.forEach(p => {
+function drawPellets(){
+    ctx.fillStyle="#7a0000";
+    pellets.forEach(p=>{
         ctx.beginPath();
-        ctx.arc(p.x*tileSize+10, p.y*tileSize+10, 3, 0, Math.PI*2);
+        ctx.arc(p.x*tile+10,p.y*tile+10,3,0,Math.PI*2);
         ctx.fill();
     });
 }
 
-function drawPacman() {
-    ctx.fillStyle = "#7a0000";
-    ctx.beginPath();
-    ctx.arc(pacman.x*tileSize+10, pacman.y*tileSize+10, 8, 0.2*Math.PI, 1.8*Math.PI);
-    ctx.lineTo(pacman.x*tileSize+10, pacman.y*tileSize+10);
-    ctx.fill();
+function drawChild(){
+    ctx.fillStyle="#fff";
+    ctx.fillRect(child.x*tile+5,child.y*tile+5,10,10);
 }
 
-function drawGhosts() {
-    ctx.fillStyle = "#444";
-    ghosts.forEach(g => {
-        ctx.fillRect(g.x*tileSize, g.y*tileSize, tileSize, tileSize);
+function drawGhosts(){
+    ghosts.forEach(g=>{
+        ctx.fillStyle="#888";
+        ctx.fillRect(g.x*tile+4,g.y*tile+4,12,12);
     });
 }
 
-function isWall(x,y) {
-    return map[y][x] === "#";
+function isWall(x,y){
+    if(y<0||y>=map.length) return true;
+    if(x<0||x>=map[0].length) return false;
+    return map[y][x]==="#";
 }
 
-function movePacman() {
-    let nextX = pacman.x + pacman.dx;
-    let nextY = pacman.y + pacman.dy;
+function moveChild(){
+    let nx=child.x+child.dx;
+    let ny=child.y+child.dy;
 
-    if (nextX < 0) nextX = map[0].length-1;
-    if (nextX >= map[0].length) nextX = 0;
+    if(nx<0) nx=map[0].length-1;
+    if(nx>=map[0].length) nx=0;
 
-    if (!isWall(nextX,nextY)) {
-        pacman.x = nextX;
-        pacman.y = nextY;
+    if(!isWall(nx,ny)){
+        child.x=nx;
+        child.y=ny;
     }
 
-    pellets = pellets.filter(p => !(p.x===pacman.x && p.y===pacman.y));
+    pellets=pellets.filter(p=>{
+        if(p.x===child.x&&p.y===child.y){
+            return false;
+        }
+        return true;
+    });
 
-    if (pellets.length === 0) {
-        window.location.href = "dashboard.html";
+    if(pellets.length===0){
+        window.location.href="dashboard.html";
     }
 }
 
-function moveGhosts() {
-    ghosts.forEach(g => {
-        let nextX = g.x + g.dx;
-        let nextY = g.y + g.dy;
+function moveGhosts(){
+    ghosts.forEach(g=>{
+        let nx=g.x+g.dx;
+        let ny=g.y+g.dy;
 
-        if (isWall(nextX,nextY)) {
-            const dirs = [
+        if(isWall(nx,ny)){
+            const dirs=[
                 {dx:1,dy:0},
                 {dx:-1,dy:0},
                 {dx:0,dy:1},
                 {dx:0,dy:-1}
             ];
-            const dir = dirs[Math.floor(Math.random()*4)];
-            g.dx = dir.dx;
-            g.dy = dir.dy;
-        } else {
-            g.x += g.dx;
-            g.y += g.dy;
+            const dir=dirs[Math.floor(Math.random()*4)];
+            g.dx=dir.dx;
+            g.dy=dir.dy;
+        }else{
+            g.x+=g.dx;
+            g.y+=g.dy;
         }
 
-        if (g.x === pacman.x && g.y === pacman.y) {
+        if(g.x===child.x&&g.y===child.y){
             init();
-            pacman.x = 14;
-            pacman.y = 23;
+            child.x=14;
+            child.y=15;
         }
     });
 }
 
-function update() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawMap();
+function update(){
+    ctx.fillStyle="#000";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    drawWalls();
     drawPellets();
-    drawPacman();
+    drawChild();
     drawGhosts();
-    movePacman();
+    moveChild();
     moveGhosts();
 }
 
-document.addEventListener("keydown", e => {
-    switch(e.key.toLowerCase()) {
+document.addEventListener("keydown",e=>{
+    switch(e.key.toLowerCase()){
         case "arrowup":
-        case "z":
-            pacman.dx = 0; pacman.dy = -1;
-            break;
+        case "z": child.dx=0;child.dy=-1;break;
         case "arrowdown":
-        case "s":
-            pacman.dx = 0; pacman.dy = 1;
-            break;
+        case "s": child.dx=0;child.dy=1;break;
         case "arrowleft":
-        case "q":
-            pacman.dx = -1; pacman.dy = 0;
-            break;
+        case "q": child.dx=-1;child.dy=0;break;
         case "arrowright":
-        case "d":
-            pacman.dx = 1; pacman.dy = 0;
-            break;
+        case "d": child.dx=1;child.dy=0;break;
     }
 });
 
 init();
-setInterval(update, 120);
+setInterval(update,120);
