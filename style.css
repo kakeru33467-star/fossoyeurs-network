@@ -135,11 +135,10 @@ button:hover {
     text-align: center;
     padding-top: 40px;
 }
-
 canvas {
-    background: #111;
-    border: 1px solid #7a0000;
-    margin-top: 20px;
+    border: 2px solid #7a0000;
+    display: block;
+    margin: 20px auto;
 }
 
 .controls {
