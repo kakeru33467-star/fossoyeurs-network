@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Réseau Interne — Les Fossoyeurs</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Le Terrier</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="centered-page">
 
 <div class="login-container">
-    <h1>LES FOSSOYEURS</h1>
-    <p class="subtitle">Réseau Interne Sécurisé</p>
 
-    <form id="loginForm">
-        <input type="password" id="password" placeholder="Clé d'Accès Unique" required>
-        <button type="submit">AUTHENTIFIER</button>
-    </form>
+<h1>LE TERRIER</h1>
+<p class="subtitle">ACCÈS RÉSERVÉ — RÉSEAU FOSSOYEURS</p>
 
-    <p id="error" class="error-message"></p>
+<form onsubmit="event.preventDefault(); window.location.href='game.html';">
 
-    <p class="warning">
-        Accès réservé aux cellules autorisées.
-    </p>
+<input type="text" placeholder="IDENTIFIANT">
+<input type="password" placeholder="CLÉ D'ACCÈS">
+
+<button type="submit">VALIDER</button>
+
+</form>
+
 </div>
 
-<script src="script.js"></script>
 </body>
 </html>
