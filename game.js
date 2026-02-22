@@ -1,179 +1,151 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const tile = 20;
-const rows = 28;
-const cols = 28;
+const tile = 40;
+const rows = 10;
+const cols = 10;
 
-let map = [];
-let pellets = [];
-let ghosts = [];
+let level = 1;
 
-const layout = [
-"############################",
-"#............##............#",
-"#.####.#####.##.#####.####.#",
-"#o####.#####.##.#####.####o#",
-"#..........................#",
-"#.####.##.########.##.####.#",
-"#......##....##....##......#",
-"######.##### ## #####.######",
-"     #.##### ## #####.#     ",
-"     #.##          ##.#     ",
-"######.## ###GG### ##.######",
-"      .   #      #   .      ",
-"######.## ######## ##.######",
-"#............##............#",
-"#.####.#####.##.#####.####.#",
-"#o..##................##..o#",
-"###.##.##.########.##.##.###",
-"#......##....##....##......#",
-"#.##########.##.##########.#",
-"#..........................#",
-"############################"
+let player = { x: 1, y: 1 };
+let documentItem = { x: 8, y: 1 };
+let exitDoor = { x: 8, y: 8 };
+
+let enemies = [];
+
+const baseMap = [
+"##########",
+"#........#",
+"#.######.#",
+"#........#",
+"#.######.#",
+"#........#",
+"#.######.#",
+"#........#",
+"#........#",
+"##########"
 ];
 
-function init() {
-    pellets = [];
-    ghosts = [];
-    map = layout.map(row => row.split(""));
+function initLevel() {
+    player = { x: 1, y: 1 };
+    documentItem = { x: 8, y: 1 };
+    exitDoor = { x: 8, y: 8 };
 
-    map.forEach((row,y)=>{
-        row.forEach((cell,x)=>{
-            if(cell==="."||cell==="o"){
-                pellets.push({x,y});
-            }
-            if(cell==="G"){
-                ghosts.push({
-                    x,y,
-                    dx:1,dy:0,
-                    color:"#555"
-                });
+    enemies = [];
+
+    for (let i = 0; i < level; i++) {
+        enemies.push({
+            x: 8 - i,
+            y: 5,
+            dx: -1,
+            dy: 0,
+            speed: 600 - level * 100
+        });
+    }
+}
+
+function drawMap() {
+    baseMap.forEach((row, y) => {
+        row.split("").forEach((cell, x) => {
+            if (cell === "#") {
+                ctx.fillStyle = "#001155";
+                ctx.fillRect(x * tile, y * tile, tile, tile);
             }
         });
     });
 }
 
-const child = {
-    x:14,
-    y:15,
-    dx:0,
-    dy:0
-};
+function drawPlayer() {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(player.x * tile + 10, player.y * tile + 10, 20, 20);
+}
 
-function drawWalls(){
-    ctx.fillStyle="#0011aa";
-    map.forEach((row,y)=>{
-        row.forEach((cell,x)=>{
-            if(cell==="#"){
-                ctx.fillRect(x*tile,y*tile,tile,tile);
-            }
-        });
+function drawDocument() {
+    ctx.fillStyle = "#7a0000";
+    ctx.fillRect(documentItem.x * tile + 12, documentItem.y * tile + 12, 16, 16);
+}
+
+function drawExit() {
+    ctx.fillStyle = "#00aa55";
+    ctx.fillRect(exitDoor.x * tile + 10, exitDoor.y * tile + 10, 20, 20);
+}
+
+function drawEnemies() {
+    enemies.forEach(e => {
+        ctx.fillStyle = "#888";
+        ctx.fillRect(e.x * tile + 8, e.y * tile + 8, 24, 24);
     });
 }
 
-function drawPellets(){
-    ctx.fillStyle="#7a0000";
-    pellets.forEach(p=>{
-        ctx.beginPath();
-        ctx.arc(p.x*tile+10,p.y*tile+10,3,0,Math.PI*2);
-        ctx.fill();
+function isWall(x, y) {
+    return baseMap[y][x] === "#";
+}
+
+function moveEnemies() {
+    enemies.forEach(e => {
+        let nx = e.x + e.dx;
+        if (isWall(nx, e.y)) {
+            e.dx *= -1;
+        } else {
+            e.x += e.dx;
+        }
+
+        if (e.x === player.x && e.y === player.y) {
+            initLevel();
+        }
     });
 }
 
-function drawChild(){
-    ctx.fillStyle="#fff";
-    ctx.fillRect(child.x*tile+5,child.y*tile+5,10,10);
-}
+let hasDocument = false;
 
-function drawGhosts(){
-    ghosts.forEach(g=>{
-        ctx.fillStyle="#888";
-        ctx.fillRect(g.x*tile+4,g.y*tile+4,12,12);
-    });
-}
+function update() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-function isWall(x,y){
-    if(y<0||y>=map.length) return true;
-    if(x<0||x>=map[0].length) return false;
-    return map[y][x]==="#";
-}
+    drawMap();
+    drawDocument();
+    drawExit();
+    drawPlayer();
+    drawEnemies();
 
-function moveChild(){
-    let nx=child.x+child.dx;
-    let ny=child.y+child.dy;
-
-    if(nx<0) nx=map[0].length-1;
-    if(nx>=map[0].length) nx=0;
-
-    if(!isWall(nx,ny)){
-        child.x=nx;
-        child.y=ny;
+    if (player.x === documentItem.x && player.y === documentItem.y) {
+        hasDocument = true;
+        documentItem = { x: -1, y: -1 };
     }
 
-    pellets=pellets.filter(p=>{
-        if(p.x===child.x&&p.y===child.y){
-            return false;
+    if (player.x === exitDoor.x && player.y === exitDoor.y && hasDocument) {
+        level++;
+        if (level > 3) {
+            window.location.href = "dashboard.html";
+        } else {
+            hasDocument = false;
+            initLevel();
         }
-        return true;
-    });
-
-    if(pellets.length===0){
-        window.location.href="dashboard.html";
     }
+
+    moveEnemies();
 }
 
-function moveGhosts(){
-    ghosts.forEach(g=>{
-        let nx=g.x+g.dx;
-        let ny=g.y+g.dy;
+document.addEventListener("keydown", e => {
+    let nx = player.x;
+    let ny = player.y;
 
-        if(isWall(nx,ny)){
-            const dirs=[
-                {dx:1,dy:0},
-                {dx:-1,dy:0},
-                {dx:0,dy:1},
-                {dx:0,dy:-1}
-            ];
-            const dir=dirs[Math.floor(Math.random()*4)];
-            g.dx=dir.dx;
-            g.dy=dir.dy;
-        }else{
-            g.x+=g.dx;
-            g.y+=g.dy;
-        }
-
-        if(g.x===child.x&&g.y===child.y){
-            init();
-            child.x=14;
-            child.y=15;
-        }
-    });
-}
-
-function update(){
-    ctx.fillStyle="#000";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    drawWalls();
-    drawPellets();
-    drawChild();
-    drawGhosts();
-    moveChild();
-    moveGhosts();
-}
-
-document.addEventListener("keydown",e=>{
-    switch(e.key.toLowerCase()){
+    switch (e.key.toLowerCase()) {
         case "arrowup":
-        case "z": child.dx=0;child.dy=-1;break;
+        case "z": ny--; break;
         case "arrowdown":
-        case "s": child.dx=0;child.dy=1;break;
+        case "s": ny++; break;
         case "arrowleft":
-        case "q": child.dx=-1;child.dy=0;break;
+        case "q": nx--; break;
         case "arrowright":
-        case "d": child.dx=1;child.dy=0;break;
+        case "d": nx++; break;
+    }
+
+    if (!isWall(nx, ny)) {
+        player.x = nx;
+        player.y = ny;
     }
 });
 
-init();
-setInterval(update,120);
+initLevel();
+setInterval(update, 200);
