@@ -196,7 +196,7 @@ function startPhase2(){
     const targets=[
         {name:"Soma & Thomas",img:"soma_toma.jpg"},
         {name:"Sahir",img:"Sahir.jpg"},
-        {name:"Raikuro",img:"Reikuro.jpg"},
+        {name:"Reikuro",img:"Reikuro.jpg"},
         {name:"Tatsumaki",img:"Tatsumaki.jpg"}
     ];
 
@@ -218,20 +218,25 @@ function startPhase2(){
     container.appendChild(assignmentZone);
 
     const cardsZone=document.createElement("div");
-    cardsZone.classList.add("cards-zone");
-    cardsZone.style.display="flex";
-    cardsZone.style.justifyContent="center";
-    cardsZone.style.gap="40px";
-    cardsZone.style.marginTop="60px";
+    cardsZone.style.position="relative";
+    cardsZone.style.width="720px";
+    cardsZone.style.height="200px";
+    cardsZone.style.margin="60px auto";
     container.appendChild(cardsZone);
 
     let shuffled=[...targets];
     shuffled.sort(()=>Math.random()-0.5);
 
-    shuffled.forEach(t=>{
+    const positions=[0,180,360,540];
+    const cards=[];
+
+    shuffled.forEach((t,i)=>{
         const card=document.createElement("div");
         card.classList.add("shuffle-card");
         card.dataset.img=t.img;
+        card.style.position="absolute";
+        card.style.left=positions[i]+"px";
+        card.style.transition="left 0.6s ease";
 
         card.innerHTML=`
             <div class="shuffle-inner">
@@ -245,19 +250,18 @@ function startPhase2(){
         `;
 
         cardsZone.appendChild(card);
+        cards.push(card);
     });
 
-    const cards=[...document.querySelectorAll(".shuffle-card")];
-
-    // 1️⃣ On laisse visibles 2 secondes
+    // 1️⃣ Laisser visible 2s
     setTimeout(()=>{
 
-        // 2️⃣ On retourne face cachée
+        // 2️⃣ Retourner face cachée
         cards.forEach(c=>{
             c.querySelector(".shuffle-inner").style.transform="rotateY(180deg)";
         });
 
-        // 3️⃣ Mélange façon gobelet (swap réel DOM)
+        // 3️⃣ Mélange animé visible
         setTimeout(()=>{
 
             let swaps=8;
@@ -269,11 +273,12 @@ function startPhase2(){
                 let b=Math.floor(Math.random()*4);
                 if(a===b) b=(b+1)%4;
 
-                const parent=cardsZone;
+                const posA=cards[a].style.left;
+                const posB=cards[b].style.left;
 
-                parent.insertBefore(cards[b], cards[a]);
+                cards[a].style.left=posB;
+                cards[b].style.left=posA;
 
-                // on met à jour le tableau
                 const temp=cards[a];
                 cards[a]=cards[b];
                 cards[b]=temp;
@@ -283,7 +288,7 @@ function startPhase2(){
                 if(count>=swaps){
                     clearInterval(shuffleInterval);
 
-                    // Activer drag
+                    // Activer drag après mélange
                     cards.forEach(c=>{
                         c.draggable=true;
                         c.addEventListener("dragstart",e=>{
@@ -292,7 +297,7 @@ function startPhase2(){
                     });
                 }
 
-            },800);
+            },900); // vitesse plus lente pour suivre
 
         },800);
 
