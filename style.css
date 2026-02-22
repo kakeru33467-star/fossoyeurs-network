@@ -146,3 +146,46 @@ canvas {
     font-size: 12px;
     color: #777;
 }
+.target-card {
+    display: flex;
+    gap: 30px;
+    background: #151515;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid #2a2a2a;
+    transition: 0.3s;
+}
+
+.target-card:hover {
+    border-color: #7a0000;
+}
+
+.target-image {
+    width: 180px;
+    height: 220px;
+    object-fit: cover;
+    border: 1px solid #333;
+}
+
+.target-info h2 {
+    margin-bottom: 10px;
+}
+
+.stars {
+    font-size: 20px;
+    color: #c79a2b;
+    letter-spacing: 3px;
+    margin-bottom: 5px;
+}
+
+.priority-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 15px;
+}
+
+.priority-5 {
+    border-color: #7a0000;
+    box-shadow: 0 0 20px rgba(122,0,0,0.2);
+}
