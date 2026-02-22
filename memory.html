@@ -194,9 +194,9 @@ function startPhase2(){
     assignmentZone.classList.add("assignment-zone");
 
     const targets=[
-        {name:"Soma & Thomas",img:"soma_toma.jpg"},
+        {name:"Soma & Thomas",img:"Soma_Thomas.jpg"},
         {name:"Sahir",img:"Sahir.jpg"},
-        {name:"Raikuro",img:"Reikuro.jpg"},
+        {name:"Raikuro",img:"Raikuro.jpg"},
         {name:"Tatsumaki",img:"Tatsumaki.jpg"}
     ];
 
@@ -219,45 +219,45 @@ function startPhase2(){
 
     const cardsZone=document.createElement("div");
     cardsZone.classList.add("cards-zone");
-    cardsZone.style.position="relative";
-    cardsZone.style.height="200px";
+    cardsZone.style.display="flex";
+    cardsZone.style.justifyContent="center";
+    cardsZone.style.gap="40px";
+    cardsZone.style.marginTop="60px";
     container.appendChild(cardsZone);
 
     let shuffled=[...targets];
     shuffled.sort(()=>Math.random()-0.5);
 
-    const positions=[0,180,360,540];
-
-    shuffled.forEach((t,i)=>{
+    shuffled.forEach(t=>{
         const card=document.createElement("div");
         card.classList.add("shuffle-card");
-        card.style.position="absolute";
-        card.style.left=positions[i]+"px";
-        card.style.transition="left 0.6s ease";
+        card.dataset.img=t.img;
+
         card.innerHTML=`
             <div class="shuffle-inner">
                 <div class="face">
                     <img src="images/${t.img}">
                 </div>
                 <div class="back">
-                    <img src="images/card_cack.jpg">
+                    <img src="images/Card_Back.jpg">
                 </div>
             </div>
         `;
+
         cardsZone.appendChild(card);
     });
 
-    const cards=document.querySelectorAll(".shuffle-card");
+    const cards=[...document.querySelectorAll(".shuffle-card")];
 
-    // Étape 1 : laisser visibles 2 secondes
+    // 1️⃣ On laisse visibles 2 secondes
     setTimeout(()=>{
 
-        // Étape 2 : retourner face cachée
+        // 2️⃣ On retourne face cachée
         cards.forEach(c=>{
             c.querySelector(".shuffle-inner").style.transform="rotateY(180deg)";
         });
 
-        // Étape 3 : mélange façon magicien
+        // 3️⃣ Mélange façon gobelet (swap réel DOM)
         setTimeout(()=>{
 
             let swaps=8;
@@ -269,26 +269,30 @@ function startPhase2(){
                 let b=Math.floor(Math.random()*4);
                 if(a===b) b=(b+1)%4;
 
-                const temp=cards[a].style.left;
-                cards[a].style.left=cards[b].style.left;
-                cards[b].style.left=temp;
+                const parent=cardsZone;
+
+                parent.insertBefore(cards[b], cards[a]);
+
+                // on met à jour le tableau
+                const temp=cards[a];
+                cards[a]=cards[b];
+                cards[b]=temp;
 
                 count++;
+
                 if(count>=swaps){
                     clearInterval(shuffleInterval);
 
-                    // Activer drag après mélange
-                    cards.forEach((c,i)=>{
+                    // Activer drag
+                    cards.forEach(c=>{
                         c.draggable=true;
                         c.addEventListener("dragstart",e=>{
-                            const img=shuffled[i].img;
-                            e.dataTransfer.setData("text",img);
+                            e.dataTransfer.setData("text",c.dataset.img);
                         });
                     });
-
                 }
 
-            },800); // vitesse du mélange (pas trop rapide)
+            },800);
 
         },800);
 
