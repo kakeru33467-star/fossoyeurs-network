@@ -2,7 +2,6 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 const tile = 40;
-const size = 15;
 
 let level = 1;
 let hasDocument = false;
@@ -11,19 +10,19 @@ let anim = 0;
 
 const dungeon = [
 "###############",
-"#.....#.......#",
-"#.###.#.#####.#",
-"#.#...#.....#.#",
-"#.#.#######.#.#",
-"#.#.#.....#.#.#",
-"#...#.###.#...#",
-"###.#.#.#.#.###",
-"#...#.#.#.#...#",
-"#.###.#.#.###.#",
-"#.....#.#.....#",
-"#.#####.#.#####",
+"#.....#...#...#",
+"#.###.#.#.#.#.#",
+"#.#...#.#...#.#",
+"#.#.###.#####.#",
+"#...#.....#...#",
+"###.#.###.#.###",
+"#...#.#...#...#",
+"#.###.#.###.#.#",
+"#.....#.....#.#",
+"#.#####.#####.#",
 "#.......#.....#",
-"#.......#.....#",
+"#.#####.#.###.#",
+"#.....#...#...#",
 "###############"
 ];
 
@@ -38,34 +37,36 @@ function initLevel() {
 
     enemies = [];
 
-    // Matriarche 1 – boucle carrée centrale
+    // Boucle centrale carrée
     enemies.push(createMatriarche([
-        {x:3,y:1},{x:11,y:1},{x:11,y:7},{x:3,y:7}
-    ], 2));
+        {x:3,y:1},{x:11,y:1},
+        {x:11,y:9},{x:3,y:9}
+    ], 600));
 
     if(level >= 2){
-        // Matriarche 2 – couloir bas
+        // Patrouille verticale
         enemies.push(createMatriarche([
-            {x:5,y:9},{x:9,y:9},{x:9,y:13},{x:5,y:13}
-        ], 2.5));
+            {x:7,y:1},{x:7,y:13}
+        ], 500));
     }
 
     if(level >= 3){
-        // Matriarche 3 – passage horizontal critique
+        // Patrouille horizontale critique
         enemies.push(createMatriarche([
-            {x:1,y:5},{x:13,y:5}
-        ], 3));
+            {x:1,y:7},{x:13,y:7}
+        ], 450));
     }
 }
 
-function createMatriarche(path, speed){
+function createMatriarche(path, delay){
     return {
         x:path[0].x,
         y:path[0].y,
         path:path,
         target:1,
-        speed:speed * 0.05,
-        vision:1.2 // zone de détection (en cases)
+        delay:delay,
+        timer:0,
+        vision:1.5
     };
 }
 
@@ -132,43 +133,39 @@ function drawMatriarche(e){
     const px = e.x*tile+10;
     const py = e.y*tile+10;
 
-    // robe
     ctx.fillStyle="#101010";
     ctx.fillRect(px+6,py+14,12,18);
 
-    // tête
     ctx.fillStyle="#bdbdbd";
     ctx.beginPath();
     ctx.arc(px+12,py+8,6,0,Math.PI*2);
     ctx.fill();
 
-    // zone détection
     ctx.fillStyle="rgba(200,0,0,0.15)";
     ctx.beginPath();
     ctx.arc(e.x*tile+20,e.y*tile+20,tile*e.vision,0,Math.PI*2);
     ctx.fill();
 }
 
-function moveEnemies(){
+function moveEnemies(delta){
     enemies.forEach(e=>{
-        const target = e.path[e.target];
-        const dx = target.x - e.x;
-        const dy = target.y - e.y;
+        e.timer += delta;
 
-        if(Math.abs(dx)>0){
-            let nx = e.x + Math.sign(dx)*e.speed;
-            if(!isWall(Math.round(nx),e.y)) e.x = nx;
-        }
-        if(Math.abs(dy)>0){
-            let ny = e.y + Math.sign(dy)*e.speed;
-            if(!isWall(e.x,Math.round(ny))) e.y = ny;
+        if(e.timer >= e.delay){
+            e.timer = 0;
+
+            const target = e.path[e.target];
+
+            if(e.x < target.x) e.x++;
+            else if(e.x > target.x) e.x--;
+            else if(e.y < target.y) e.y++;
+            else if(e.y > target.y) e.y--;
+
+            if(e.x === target.x && e.y === target.y){
+                e.target = (e.target+1)%e.path.length;
+            }
         }
 
-        if(Math.round(e.x)===target.x && Math.round(e.y)===target.y){
-            e.target = (e.target+1)%e.path.length;
-        }
-
-        // détection zone
         const dist = Math.hypot(e.x-player.x,e.y-player.y);
         if(dist < e.vision){
             initLevel();
@@ -192,7 +189,12 @@ function drawVictory(){
     ctx.fillText("ACCEPTÉE",150,300);
 }
 
-function update(){
+let lastTime = 0;
+
+function update(timestamp){
+    const delta = timestamp - lastTime;
+    lastTime = timestamp;
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawMap();
     drawDocument();
@@ -201,7 +203,7 @@ function update(){
     enemies.forEach(drawMatriarche);
     drawHUD();
 
-    moveEnemies();
+    moveEnemies(delta);
 
     if(player.x===documentItem.x && player.y===documentItem.y){
         hasDocument=true;
@@ -222,6 +224,7 @@ function update(){
     }
 
     anim++;
+    requestAnimationFrame(update);
 }
 
 document.addEventListener("keydown",e=>{
@@ -246,4 +249,4 @@ document.addEventListener("keydown",e=>{
 });
 
 initLevel();
-setInterval(update,40);
+requestAnimationFrame(update);
