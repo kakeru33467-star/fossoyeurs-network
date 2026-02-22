@@ -8,58 +8,55 @@
 <style>
 
 .memory-container {
-    padding: 40px;
-    text-align: center;
+    padding:40px;
+    text-align:center;
 }
 
+/* PHASE 1 */
+
 .memory-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 120px);
-    gap: 15px;
-    justify-content: center;
-    margin-top: 40px;
+    display:grid;
+    grid-template-columns:repeat(5,120px);
+    gap:15px;
+    justify-content:center;
+    margin-top:40px;
 }
 
 .memory-card {
-    width: 120px;
-    height: 160px;
-    background: #111;
-    border: 1px solid #222;
-    cursor: pointer;
-    position: relative;
-    perspective: 1000px;
+    width:120px;
+    height:160px;
+    perspective:1000px;
+    cursor:pointer;
 }
 
 .memory-inner {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    transition: transform 0.5s;
-    transform-style: preserve-3d;
+    width:100%;
+    height:100%;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform 0.5s;
 }
 
 .memory-card.flipped .memory-inner {
-    transform: rotateY(180deg);
+    transform:rotateY(180deg);
 }
 
-.memory-front,
-.memory-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
+.face, .back {
+    position:absolute;
+    width:100%;
+    height:100%;
+    backface-visibility:hidden;
 }
 
-.memory-front { background:#1a1a1a; }
-
-.memory-back {
-    transform: rotateY(180deg);
-}
-
-.memory-back img {
+.face img,
+.back img {
     width:100%;
     height:100%;
     object-fit:cover;
+}
+
+.back {
+    transform:rotateY(180deg);
 }
 
 /* PHASE 2 */
@@ -84,31 +81,29 @@
 }
 
 .cards-zone {
-    position:relative;
-    height:200px;
+    display:flex;
+    justify-content:center;
+    gap:30px;
     margin-top:50px;
 }
 
 .shuffle-card {
     width:140px;
     height:180px;
-    position:absolute;
-    top:0;
-    left:50%;
-    transform:translateX(-50%);
-    transition:all 0.6s ease;
-    cursor:pointer;
+    perspective:1000px;
+    cursor:grab;
 }
 
-.shuffle-card img {
+.shuffle-inner {
     width:100%;
     height:100%;
-    object-fit:cover;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform 0.6s;
 }
 
-.hidden-face {
-    background:#111;
-    border:1px solid #222;
+.shuffle-card.revealed .shuffle-inner {
+    transform:rotateY(180deg);
 }
 
 </style>
@@ -116,12 +111,9 @@
 <body>
 
 <div class="memory-container">
-
 <h1>VÉRIFICATION COGNITIVE</h1>
 <p class="subtitle">Étape 1 — Association</p>
-
 <div class="memory-grid" id="memoryGrid"></div>
-
 </div>
 
 <script>
@@ -137,47 +129,48 @@ const characters = [
 ];
 
 let cards = [...characters, ...characters];
-cards.sort(() => Math.random() - 0.5);
+cards.sort(()=>Math.random()-0.5);
 
 const grid = document.getElementById("memoryGrid");
 
-let flipped = [];
-let matched = 0;
+let flipped=[];
+let matched=0;
 
-cards.forEach(img => {
+cards.forEach(img=>{
 
-    const card = document.createElement("div");
+    const card=document.createElement("div");
     card.classList.add("memory-card");
 
-    card.innerHTML = `
+    card.innerHTML=`
         <div class="memory-inner">
-            <div class="memory-front"></div>
-            <div class="memory-back">
+            <div class="face">
+                <img src="images/Card_Back.jpg">
+            </div>
+            <div class="back">
                 <img src="images/${img}">
             </div>
         </div>
     `;
 
-    card.addEventListener("click", () => {
+    card.addEventListener("click",()=>{
 
-        if (card.classList.contains("flipped") || flipped.length === 2) return;
+        if(card.classList.contains("flipped")||flipped.length===2) return;
 
         card.classList.add("flipped");
-        flipped.push({card, img});
+        flipped.push({card,img});
 
-        if (flipped.length === 2) {
-            if (flipped[0].img === flipped[1].img) {
+        if(flipped.length===2){
+            if(flipped[0].img===flipped[1].img){
                 matched++;
-                flipped = [];
-
-                if (matched === characters.length) {
-                    setTimeout(startPhase2, 1200);
+                flipped=[];
+                if(matched===characters.length){
+                    setTimeout(startPhase2,1200);
                 }
-            } else {
-                setTimeout(() => {
-                    flipped.forEach(c => c.card.classList.remove("flipped"));
-                    flipped = [];
-                }, 800);
+            }else{
+                setTimeout(()=>{
+                    flipped.forEach(c=>c.card.classList.remove("flipped"));
+                    flipped=[];
+                },800);
             }
         }
     });
@@ -189,33 +182,33 @@ cards.forEach(img => {
 
 function startPhase2(){
 
-    document.querySelector("h1").innerText = "RECONSTITUTION IDENTITAIRE";
-    document.querySelector(".subtitle").innerText = "Mémorisez puis replacez correctement";
+    document.querySelector("h1").innerText="RECONSTITUTION IDENTITAIRE";
+    document.querySelector(".subtitle").innerText="Mémorisez les positions";
 
     grid.remove();
 
-    const container = document.querySelector(".memory-container");
+    const container=document.querySelector(".memory-container");
 
-    const assignmentZone = document.createElement("div");
+    const assignmentZone=document.createElement("div");
     assignmentZone.classList.add("assignment-zone");
 
-    const targets = [
-        {name:"Soma & Thomas", img:"Soma_Thomas.jpg"},
-        {name:"Sahir", img:"Sahir.jpg"},
-        {name:"Raikuro", img:"Raikuro.jpg"},
-        {name:"Tatsumaki", img:"Tatsumaki.jpg"}
+    const targets=[
+        {name:"Soma & Thomas",img:"Soma_Thomas.jpg"},
+        {name:"Sahir",img:"Sahir.jpg"},
+        {name:"Raikuro",img:"Raikuro.jpg"},
+        {name:"Tatsumaki",img:"Tatsumaki.jpg"}
     ];
 
     targets.forEach(t=>{
-        const slot = document.createElement("div");
+        const slot=document.createElement("div");
         slot.classList.add("drop-slot");
-        slot.dataset.correct = t.img;
-        slot.innerHTML = `<strong>${t.name}</strong>`;
-        slot.addEventListener("dragover", e=>e.preventDefault());
-        slot.addEventListener("drop", e=>{
-            const img = e.dataTransfer.getData("text");
-            slot.innerHTML = `<img src="images/${img}" style="width:100%;height:100%;object-fit:cover;">`;
-            slot.dataset.filled = img;
+        slot.dataset.correct=t.img;
+        slot.innerHTML=`<strong>${t.name}</strong>`;
+        slot.addEventListener("dragover",e=>e.preventDefault());
+        slot.addEventListener("drop",e=>{
+            const img=e.dataTransfer.getData("text");
+            slot.innerHTML=`<img src="images/${img}" style="width:100%;height:100%;object-fit:cover;">`;
+            slot.dataset.filled=img;
             checkCompletion();
         });
         assignmentZone.appendChild(slot);
@@ -223,66 +216,64 @@ function startPhase2(){
 
     container.appendChild(assignmentZone);
 
-    const cardsZone = document.createElement("div");
+    const cardsZone=document.createElement("div");
     cardsZone.classList.add("cards-zone");
     container.appendChild(cardsZone);
 
-    let shuffle = [...targets];
-    shuffle.sort(()=>Math.random()-0.5);
+    let shuffled=[...targets];
+    shuffled.sort(()=>Math.random()-0.5);
 
-    shuffle.forEach((t,i)=>{
-        const card = document.createElement("div");
+    shuffled.forEach(t=>{
+        const card=document.createElement("div");
         card.classList.add("shuffle-card");
-        card.style.left = `${30 + i*160}px`;
-        card.innerHTML = `<img src="images/${t.img}">`;
+        card.draggable=false;
+
+        card.innerHTML=`
+            <div class="shuffle-inner">
+                <div class="face">
+                    <img src="images/Card_Back.jpg">
+                </div>
+                <div class="back">
+                    <img src="images/${t.img}">
+                </div>
+            </div>
+        `;
+
         cardsZone.appendChild(card);
     });
 
-    const shuffleCards = document.querySelectorAll(".shuffle-card");
+    const shuffleCards=document.querySelectorAll(".shuffle-card");
 
-    // animation reveal
+    // Reveal faces
+    setTimeout(()=>{
+        shuffleCards.forEach(c=>c.classList.add("revealed"));
+    },800);
+
+    // Hide again after memory time
     setTimeout(()=>{
         shuffleCards.forEach(c=>{
-            c.style.transform = "translateX(-50%) rotateY(180deg)";
-        });
-    },500);
-
-    // shuffle animation
-    setTimeout(()=>{
-        for(let i=0;i<10;i++){
-            setTimeout(()=>{
-                shuffleCards.forEach(c=>{
-                    c.style.left = `${30 + Math.floor(Math.random()*4)*160}px`;
-                });
-            }, i*200);
-        }
-    },2000);
-
-    // hide faces and enable drag
-    setTimeout(()=>{
-        shuffleCards.forEach((c,i)=>{
-            c.innerHTML = `<div class="hidden-face"></div>`;
-            c.draggable = true;
-            c.addEventListener("dragstart", e=>{
-                e.dataTransfer.setData("text", shuffle[i].img);
+            c.classList.remove("revealed");
+            c.draggable=true;
+            c.addEventListener("dragstart",e=>{
+                const img=c.querySelector(".back img").getAttribute("src").split("/").pop();
+                e.dataTransfer.setData("text",img);
             });
         });
-    },4500);
+    },3500);
 }
 
 function checkCompletion(){
-    const slots = document.querySelectorAll(".drop-slot");
-    let correct = true;
-
-    slots.forEach(slot=>{
-        if(slot.dataset.filled !== slot.dataset.correct){
-            correct = false;
+    const slots=document.querySelectorAll(".drop-slot");
+    let correct=true;
+    slots.forEach(s=>{
+        if(s.dataset.filled!==s.dataset.correct){
+            correct=false;
         }
     });
 
     if(correct){
         setTimeout(()=>{
-            window.location.href = "enfants.html";
+            window.location.href="enfants.html";
         },1000);
     }
 }
