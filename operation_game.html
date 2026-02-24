@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Opération : Cheval de Troie</title>
+<link rel="stylesheet" href="style.css">
+<style>
+
+body{
+    background:#0d0d0d;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.arena-container{
+    text-align:center;
+}
+
+canvas{
+    background:linear-gradient(#1a1a1a,#0a0a0a);
+    border:3px solid #7a0000;
+}
+
+.hud{
+    display:flex;
+    justify-content:space-between;
+    width:600px;
+    margin-bottom:10px;
+    color:#aaa;
+    font-size:14px;
+}
+
+.health-bar{
+    height:10px;
+    background:#333;
+    width:250px;
+    position:relative;
+}
+
+.health-fill{
+    height:100%;
+    background:#7a0000;
+    width:100%;
+}
+
+.controls{
+    font-size:12px;
+    margin-top:15px;
+    color:#666;
+}
+
+</style>
+</head>
+<body>
+
+<div class="arena-container">
+
+<div class="hud">
+    <div>
+        Agent
+        <div class="health-bar">
+            <div id="playerHealth" class="health-fill"></div>
+        </div>
+    </div>
+    <div>
+        Élève U.A.
+        <div class="health-bar">
+            <div id="enemyHealth" class="health-fill"></div>
+        </div>
+    </div>
+</div>
+
+<canvas id="fightCanvas" width="600" height="300"></canvas>
+
+<div class="controls">
+ZQSD pour bouger — E pour attaquer
+</div>
+
+</div>
+
+<audio id="combatMusic" src="audio/combat.mp3" loop></audio>
+
+<script>
+
+const canvas = document.getElementById("fightCanvas");
+const ctx = canvas.getContext("2d");
+
+const combatMusic = document.getElementById("combatMusic");
+
+let player = {x:100,y:200,w:40,h:60,health:100};
+let enemy = {x:450,y:200,w:40,h:60,health:100};
+
+let keys = {};
+let attacking = false;
+
+document.addEventListener("keydown",e=>{
+    keys[e.key.toLowerCase()] = true;
+
+    if(e.key.toLowerCase()==="e"){
+        attack();
+    }
+});
+
+document.addEventListener("keyup",e=>{
+    keys[e.key.toLowerCase()] = false;
+});
+
+document.addEventListener("click",()=>{
+    combatMusic.volume = 0.5;
+    combatMusic.play().catch(()=>{});
+},{once:true});
+
+function drawArena(){
+    ctx.fillStyle="#141414";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle="#222";
+    ctx.fillRect(0,260,600,40);
+}
+
+function drawFighter(f,color){
+    ctx.fillStyle=color;
+    ctx.fillRect(f.x,f.y,f.w,f.h);
+}
+
+function movePlayer(){
+    if(keys["q"]) player.x -= 4;
+    if(keys["d"]) player.x += 4;
+
+    player.x = Math.max(0,Math.min(canvas.width-player.w,player.x));
+}
+
+function enemyAI(){
+    if(enemy.x > player.x+20) enemy.x -= 2;
+    else if(enemy.x < player.x-20) enemy.x += 2;
+
+    if(Math.random()<0.01){
+        enemyAttack();
+    }
+}
+
+function attack(){
+    if(attacking) return;
+
+    attacking = true;
+
+    const range = 60;
+
+    if(Math.abs(player.x - enemy.x) < range){
+        enemy.health -= 10;
+        updateHealth();
+    }
+
+    setTimeout(()=> attacking=false,400);
+}
+
+function enemyAttack(){
+    if(Math.abs(player.x - enemy.x) < 60){
+        player.health -= 8;
+        updateHealth();
+    }
+}
+
+function updateHealth(){
+    document.getElementById("playerHealth").style.width = player.health + "%";
+    document.getElementById("enemyHealth").style.width = enemy.health + "%";
+
+    if(player.health <= 0){
+        alert("Mission échouée.");
+        window.location.href="dashboard.html";
+    }
+
+    if(enemy.health <= 0){
+        alert("Cible neutralisée.");
+        window.location.href="dashboard.html";
+    }
+}
+
+function update(){
+    drawArena();
+    movePlayer();
+    enemyAI();
+
+    drawFighter(player,"#e6e6e6");
+    drawFighter(enemy,"#7a0000");
+
+    requestAnimationFrame(update);
+}
+
+update();
+
+</script>
+
+</body>
+</html>
