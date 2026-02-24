@@ -1,14 +1,21 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const dungeonMusic = document.getElementById("dungeonMusic");
+const loseSound = document.getElementById("loseSound");
+const winSound = document.getElementById("winSound");
+
 const tile = 40;
 let level = 1;
 let hasDocument = false;
 let anim = 0;
 let lastTime = 0;
+let isDead = false;
+let levelTransition = false;
 
 const levels = [
 
+// ===== NIVEAU 1 =====
 {
 map:[
 "###############",
@@ -35,6 +42,7 @@ enemies:[
 ]
 },
 
+// ===== NIVEAU 2 =====
 {
 map:[
 "###############",
@@ -62,6 +70,7 @@ enemies:[
 ]
 },
 
+// ===== NIVEAU 3 =====
 {
 map:[
 "###############",
@@ -100,6 +109,8 @@ function loadLevel(){
     documentItem = {...lvl.doc};
     exitDoor = {...lvl.exit};
     hasDocument = false;
+    isDead = false;
+    levelTransition = false;
 
     enemies = lvl.enemies.map(e => ({
         x:e.path[0].x,
@@ -215,7 +226,6 @@ function moveEnemies(delta){
             }
         }
 
-        // zone rouge mortelle
         const playerCenterX = player.x * tile + tile/2;
         const playerCenterY = player.y * tile + tile/2;
         const enemyCenterX = e.x * tile + tile/2;
@@ -226,8 +236,11 @@ function moveEnemies(delta){
             playerCenterY - enemyCenterY
         );
 
-        if(distance < tile * 1.2){
-            loadLevel();
+        if(distance < tile * 1.2 && !isDead){
+            isDead = true;
+            loseSound.currentTime = 0;
+            loseSound.play();
+            setTimeout(()=> loadLevel(),600);
         }
     });
 }
@@ -250,13 +263,24 @@ function update(timestamp){
         hasDocument=true;
     }
 
-    if(player.x===exitDoor.x && player.y===exitDoor.y && hasDocument){
-        level++;
-        if(level>3){
-            window.location.href="dashboard.html";
-        }else{
-            loadLevel();
-        }
+    if(
+        player.x===exitDoor.x &&
+        player.y===exitDoor.y &&
+        hasDocument &&
+        !levelTransition
+    ){
+        levelTransition = true;
+        winSound.currentTime = 0;
+        winSound.play();
+
+        setTimeout(()=>{
+            level++;
+            if(level>3){
+                window.location.href="dashboard.html";
+            }else{
+                loadLevel();
+            }
+        },800);
     }
 
     anim++;
@@ -283,6 +307,12 @@ document.addEventListener("keydown",e=>{
         player.y=ny;
     }
 });
+
+// Lancement musique au premier clic (obligatoire navigateur)
+document.addEventListener("click",()=>{
+    dungeonMusic.volume = 0.4;
+    dungeonMusic.play().catch(()=>{});
+},{once:true});
 
 loadLevel();
 requestAnimationFrame(update);
