@@ -1,17 +1,11 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const dungeonMusic = document.getElementById("dungeonMusic");
-const loseSound = document.getElementById("loseSound");
-const winSound = document.getElementById("winSound");
-
 const tile = 40;
 let level = 1;
 let hasDocument = false;
 let anim = 0;
 let lastTime = 0;
-let isDead = false;
-let levelTransition = false;
 
 const levels = [
 
@@ -106,7 +100,6 @@ function loadLevel(){
     documentItem = {...lvl.doc};
     exitDoor = {...lvl.exit};
     hasDocument = false;
-    isDead = false;
 
     enemies = lvl.enemies.map(e => ({
         x:e.path[0].x,
@@ -222,6 +215,7 @@ function moveEnemies(delta){
             }
         }
 
+        // zone rouge mortelle
         const playerCenterX = player.x * tile + tile/2;
         const playerCenterY = player.y * tile + tile/2;
         const enemyCenterX = e.x * tile + tile/2;
@@ -232,17 +226,8 @@ function moveEnemies(delta){
             playerCenterY - enemyCenterY
         );
 
-        const dangerRadius = tile * 1.2;
-
-        if(distance < dangerRadius && !isDead){
-            isDead = true;
-
-            loseSound.currentTime = 0;
-            loseSound.play();
-
-            setTimeout(()=>{
-                loadLevel();
-            },600);
+        if(distance < tile * 1.2){
+            loadLevel();
         }
     });
 }
@@ -265,31 +250,14 @@ function update(timestamp){
         hasDocument=true;
     }
 
-   if(
-    player.x === exitDoor.x &&
-    player.y === exitDoor.y &&
-    hasDocument &&
-    !levelTransition
-){
-
-    levelTransition = true;
-
-    winSound.currentTime = 0;
-    winSound.play();
-
-    setTimeout(()=>{
-
+    if(player.x===exitDoor.x && player.y===exitDoor.y && hasDocument){
         level++;
-
-        if(level > 3){
+        if(level>3){
             window.location.href="dashboard.html";
-        } else {
+        }else{
             loadLevel();
-            levelTransition = false;
         }
-
-    },800);
-}
+    }
 
     anim++;
     requestAnimationFrame(update);
@@ -315,11 +283,6 @@ document.addEventListener("keydown",e=>{
         player.y=ny;
     }
 });
-
-document.addEventListener("click",()=>{
-    dungeonMusic.volume = 0.4;
-    dungeonMusic.play().catch(()=>{});
-},{once:true});
 
 loadLevel();
 requestAnimationFrame(update);
