@@ -11,6 +11,7 @@ let hasDocument = false;
 let anim = 0;
 let lastTime = 0;
 let isDead = false;
+let levelTransition = false;
 
 const levels = [
 
@@ -264,19 +265,31 @@ function update(timestamp){
         hasDocument=true;
     }
 
-    if(player.x===exitDoor.x && player.y===exitDoor.y && hasDocument){
+   if(
+    player.x === exitDoor.x &&
+    player.y === exitDoor.y &&
+    hasDocument &&
+    !levelTransition
+){
 
-        winSound.currentTime = 0;
-        winSound.play();
+    levelTransition = true;
+
+    winSound.currentTime = 0;
+    winSound.play();
+
+    setTimeout(()=>{
 
         level++;
 
-        if(level>3){
-            setTimeout(()=>window.location.href="dashboard.html",1500);
-        }else{
-            setTimeout(()=>loadLevel(),800);
+        if(level > 3){
+            window.location.href="dashboard.html";
+        } else {
+            loadLevel();
+            levelTransition = false;
         }
-    }
+
+    },800);
+}
 
     anim++;
     requestAnimationFrame(update);
