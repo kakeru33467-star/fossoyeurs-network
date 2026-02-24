@@ -200,10 +200,14 @@ function drawMatriarche(e){
 }
 
 function moveEnemies(delta){
+
     enemies.forEach(e=>{
+
         e.timer += delta;
+
         if(e.timer >= e.speed){
             e.timer = 0;
+
             const target = e.path[e.target];
 
             if(e.x < target.x) e.x++;
@@ -216,10 +220,25 @@ function moveEnemies(delta){
             }
         }
 
-        const dist = Math.hypot(e.x-player.x,e.y-player.y);
-        if(dist < 1){
-            loadLevel();
+        // 🔥 NOUVELLE COLLISION ZONE ROUGE
+
+        const playerCenterX = player.x * tile + tile/2;
+        const playerCenterY = player.y * tile + tile/2;
+
+        const enemyCenterX = e.x * tile + tile/2;
+        const enemyCenterY = e.y * tile + tile/2;
+
+        const distance = Math.hypot(
+            playerCenterX - enemyCenterX,
+            playerCenterY - enemyCenterY
+        );
+
+        const dangerRadius = tile * 1.2; // même rayon que le cercle dessiné
+
+        if(distance < dangerRadius){
+            loadLevel(); // mort
         }
+
     });
 }
 
