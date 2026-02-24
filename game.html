@@ -2,18 +2,22 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Validation Sécurisée</title>
+<title>Infiltration</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="game-container">
-    <h2>Validation Cognitive</h2>
-    <canvas id="gameCanvas" width="600" height="600"></canvas>
-    <p>Nettoyez entièrement la grille.</p>
-    <p class="controls">Flèches ou ZQSD</p>
+<canvas id="gameCanvas" width="600" height="600"></canvas>
+<p class="controls">ZQSD ou flèches pour se déplacer</p>
 </div>
 
+<!-- 🎵 AUDIO -->
+<audio id="dungeonMusic" src="audio/dungeon.mp3" loop></audio>
+<audio id="loseSound" src="audio/perdu.mp3"></audio>
+<audio id="winSound" src="audio/victoire.mp3"></audio>
+
 <script src="game.js"></script>
+
 </body>
 </html>
