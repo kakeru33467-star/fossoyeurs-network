@@ -1,13 +1,18 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const dungeonMusic = document.getElementById("dungeonMusic");
+const loseSound = document.getElementById("loseSound");
+const winSound = document.getElementById("winSound");
+
 const tile = 40;
 let level = 1;
 let hasDocument = false;
 let anim = 0;
+let lastTime = 0;
+let isDead = false;
 
-const levels = [
-
+const levels = [/* --- TES NIVEAUX RESTENT IDENTIQUES --- */
 {
 map:[
 "###############",
@@ -33,7 +38,6 @@ enemies:[
 {path:[{x:5,y:5},{x:9,y:5},{x:9,y:9},{x:5,y:9}], speed:400}
 ]
 },
-
 {
 map:[
 "###############",
@@ -60,7 +64,6 @@ enemies:[
 {path:[{x:7,y:1},{x:7,y:13}], speed:260}
 ]
 },
-
 {
 map:[
 "###############",
@@ -88,7 +91,6 @@ enemies:[
 {path:[{x:3,y:3},{x:11,y:11}], speed:200}
 ]
 }
-
 ];
 
 let dungeon, player, documentItem, exitDoor, enemies;
@@ -100,6 +102,7 @@ function loadLevel(){
     documentItem = {...lvl.doc};
     exitDoor = {...lvl.exit};
     hasDocument = false;
+    isDead = false;
 
     enemies = lvl.enemies.map(e => ({
         x:e.path[0].x,
@@ -107,8 +110,7 @@ function loadLevel(){
         path:e.path,
         target:1,
         speed:e.speed,
-        timer:0,
-        vision:1.2
+        timer:0
     }));
 }
 
@@ -119,15 +121,8 @@ function isWall(x,y){
 function drawMap(){
     dungeon.forEach((row,y)=>{
         row.split("").forEach((cell,x)=>{
-            if(cell==="#"){
-                ctx.fillStyle="#3b332c";
-                ctx.fillRect(x*tile,y*tile,tile,tile);
-                ctx.strokeStyle="#2a241f";
-                ctx.strokeRect(x*tile,y*tile,tile,tile);
-            }else{
-                ctx.fillStyle="#1a1714";
-                ctx.fillRect(x*tile,y*tile,tile,tile);
-            }
+            ctx.fillStyle = cell === "#" ? "#3b332c" : "#1a1714";
+            ctx.fillRect(x*tile,y*tile,tile,tile);
         });
     });
 }
@@ -142,43 +137,22 @@ function drawPlayer(){
     ctx.fill();
 
     ctx.fillRect(px+8,py+14,8,14);
-
-    if(anim%20<10){
-        ctx.fillRect(px+6,py+26,4,6);
-        ctx.fillRect(px+14,py+26,4,6);
-    }else{
-        ctx.fillRect(px+8,py+26,4,6);
-        ctx.fillRect(px+12,py+26,4,6);
-    }
 }
 
 function drawDocument(){
     if(!hasDocument){
         const px = documentItem.x*tile+12;
         const py = documentItem.y*tile+12;
-
         ctx.fillStyle="#e8e0c8";
         ctx.fillRect(px,py,16,20);
-
-        ctx.fillStyle="#b0a890";
-        ctx.fillRect(px+3,py+5,10,2);
-        ctx.fillRect(px+3,py+10,10,2);
     }
 }
 
 function drawExit(){
     const px = exitDoor.x*tile+10;
     const py = exitDoor.y*tile+10;
-
-    // cadre porte
     ctx.fillStyle="#2f5e3b";
     ctx.fillRect(px,py,20,30);
-
-    // poignée
-    ctx.fillStyle="#d4b35a";
-    ctx.beginPath();
-    ctx.arc(px+15,py+15,3,0,Math.PI*2);
-    ctx.fill();
 }
 
 function drawMatriarche(e){
@@ -188,11 +162,6 @@ function drawMatriarche(e){
     ctx.fillStyle="#111";
     ctx.fillRect(px+6,py+14,12,18);
 
-    ctx.fillStyle="#bdbdbd";
-    ctx.beginPath();
-    ctx.arc(px+12,py+8,6,0,Math.PI*2);
-    ctx.fill();
-
     ctx.fillStyle="rgba(200,0,0,0.15)";
     ctx.beginPath();
     ctx.arc(e.x*tile+20,e.y*tile+20,tile*1.2,0,Math.PI*2);
@@ -200,14 +169,11 @@ function drawMatriarche(e){
 }
 
 function moveEnemies(delta){
-
     enemies.forEach(e=>{
 
         e.timer += delta;
-
         if(e.timer >= e.speed){
             e.timer = 0;
-
             const target = e.path[e.target];
 
             if(e.x < target.x) e.x++;
@@ -220,11 +186,8 @@ function moveEnemies(delta){
             }
         }
 
-        // 🔥 NOUVELLE COLLISION ZONE ROUGE
-
         const playerCenterX = player.x * tile + tile/2;
         const playerCenterY = player.y * tile + tile/2;
-
         const enemyCenterX = e.x * tile + tile/2;
         const enemyCenterY = e.y * tile + tile/2;
 
@@ -233,16 +196,20 @@ function moveEnemies(delta){
             playerCenterY - enemyCenterY
         );
 
-        const dangerRadius = tile * 1.2; // même rayon que le cercle dessiné
+        const dangerRadius = tile * 1.2;
 
-        if(distance < dangerRadius){
-            loadLevel(); // mort
+        if(distance < dangerRadius && !isDead){
+            isDead = true;
+
+            loseSound.currentTime = 0;
+            loseSound.play();
+
+            setTimeout(()=>{
+                loadLevel();
+            },600);
         }
-
     });
 }
-
-let lastTime=0;
 
 function update(timestamp){
     const delta = timestamp - lastTime;
@@ -263,15 +230,19 @@ function update(timestamp){
     }
 
     if(player.x===exitDoor.x && player.y===exitDoor.y && hasDocument){
+
+        winSound.currentTime = 0;
+        winSound.play();
+
         level++;
+
         if(level>3){
             setTimeout(()=>window.location.href="dashboard.html",1500);
         }else{
-            loadLevel();
+            setTimeout(()=>loadLevel(),800);
         }
     }
 
-    anim++;
     requestAnimationFrame(update);
 }
 
@@ -295,6 +266,12 @@ document.addEventListener("keydown",e=>{
         player.y=ny;
     }
 });
+
+/* 🎵 Lancement musique au premier clic */
+document.addEventListener("click",()=>{
+    dungeonMusic.volume = 0.4;
+    dungeonMusic.play().catch(()=>{});
+},{once:true});
 
 loadLevel();
 requestAnimationFrame(update);
