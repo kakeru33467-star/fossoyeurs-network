@@ -45,10 +45,28 @@ const canvas = document.getElementById("arena");
 const ctx = canvas.getContext("2d");
 const music = document.getElementById("music");
 
-document.addEventListener("click",()=>{
-    music.volume = 0.4;
-    music.play().catch(()=>{});
-},{once:true});
+let musicStarted = false;
+
+function tryStartMusic(){
+
+    if(musicStarted) return;
+
+    music.volume = 0.5;
+
+    music.play()
+        .then(()=>{
+            musicStarted = true;
+            console.log("Musique lancée");
+        })
+        .catch(()=>{ 
+            // si refusé, on réessaiera au prochain input
+        });
+}
+
+// on tente à chaque interaction utilisateur
+document.addEventListener("click", tryStartMusic);
+document.addEventListener("keydown", tryStartMusic);
+document.addEventListener("touchstart", tryStartMusic);
 
 const GRAVITY = 2000;
 const FLOOR = 460;
