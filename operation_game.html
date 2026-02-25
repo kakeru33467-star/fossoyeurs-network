@@ -6,24 +6,24 @@
 <style>
 body{
     margin:0;
-    background:#0b0b0b;
+    background:linear-gradient(#87c9ff,#e6f4ff);
     display:flex;
     flex-direction:column;
-    justify-content:center;
     align-items:center;
+    justify-content:center;
     height:100vh;
     font-family:monospace;
-    color:#aaa;
 }
 
 canvas{
-    background:#151515;
-    border:3px solid #7a0000;
+    border:4px solid #2c5f85;
+    background:#a8ddff;
 }
 
 .controls{
     margin-top:10px;
     font-size:14px;
+    color:#333;
 }
 </style>
 </head>
@@ -51,6 +51,9 @@ document.addEventListener("click",()=>{
 const GRAVITY = 2000;
 const FLOOR = 460;
 
+let playerScore = 0;
+let enemyScore = 0;
+
 const platforms = [
     {x:200,y:420,w:120,h:15},
     {x:400,y:360,w:150,h:15},
@@ -60,6 +63,7 @@ const platforms = [
 
 class Fighter{
     constructor(x,color,isAI=false){
+        this.startX = x;
         this.x = x;
         this.y = FLOOR;
         this.vx = 0;
@@ -76,6 +80,15 @@ class Fighter{
         this.cooldown = 0;
     }
 
+    reset(){
+        this.x = this.startX;
+        this.y = FLOOR;
+        this.vx = 0;
+        this.vy = 0;
+        this.health = 100;
+        this.attacking = false;
+    }
+
     update(dt, opponent){
 
         this.direction = this.x < opponent.x ? 1 : -1;
@@ -83,14 +96,12 @@ class Fighter{
         this.vy += GRAVITY * dt;
         this.y += this.vy * dt;
 
-        // collision sol
         if(this.y > FLOOR){
             this.y = FLOOR;
             this.vy = 0;
             this.onGround = true;
         }
 
-        // collision plateformes
         platforms.forEach(p=>{
             if(this.x+this.width > p.x &&
                this.x < p.x+p.w &&
@@ -153,23 +164,22 @@ class Fighter{
         ctx.fillRect(this.x+25, this.y-30, 5,5);
         ctx.fillRect(this.x+15, this.y-15, 10,3);
 
-        // épée posée
+        // épée
         ctx.strokeStyle="#ccc";
         ctx.lineWidth=4;
 
         if(!this.attacking){
-            // épée verticale
             ctx.beginPath();
-            ctx.moveTo(this.x+20,this.y-this.height-10);
-            ctx.lineTo(this.x+20,this.y-this.height+20);
+            ctx.moveTo(this.x+20,this.y-this.height-15);
+            ctx.lineTo(this.x+20,this.y-this.height+10);
             ctx.stroke();
         }else{
-            // animation coup haut -> bas
-            const swing = 40 * (1 - this.attackTime/0.25);
+            // mouvement haut -> bas
+            const progress = 1 - (this.attackTime/0.25);
             ctx.beginPath();
-            ctx.moveTo(this.x+20,this.y-this.height-10);
-            ctx.lineTo(this.x+20 + this.direction*swing,
-                       this.y-this.height+20);
+            ctx.moveTo(this.x+20,this.y-this.height-15);
+            ctx.lineTo(this.x+20,
+                       this.y-this.height-15 + 40*progress);
             ctx.stroke();
         }
     }
@@ -195,8 +205,8 @@ class Fighter{
     }
 }
 
-const player = new Fighter(150,"#e6e6e6");
-const enemy = new Fighter(700,"#7a0000",true);
+const player = new Fighter(150,"#ffffff");
+const enemy = new Fighter(700,"#ff4d4d",true);
 
 let keys = {};
 let lastTime = 0;
@@ -235,10 +245,6 @@ function enemyAI(){
             enemy.attack();
         }
     }
-
-    if(Math.random() < 0.005){
-        enemy.jump();
-    }
 }
 
 function combat(){
@@ -258,28 +264,60 @@ function combat(){
     }
 
     if(enemy.health <= 0){
-        alert("Simulation réussie.");
-        window.location.href="dashboard.html";
+        playerScore++;
+        nextRound();
     }
 
     if(player.health <= 0){
-        alert("Échec.");
-        window.location.href="dashboard.html";
+        enemyScore++;
+        nextRound();
     }
+}
+
+function nextRound(){
+    if(playerScore === 3){
+        alert("Victoire !");
+        window.location.href="dashboard.html";
+        return;
+    }
+    if(enemyScore === 3){
+        alert("Défaite...");
+        window.location.href="dashboard.html";
+        return;
+    }
+    player.reset();
+    enemy.reset();
 }
 
 function drawArena(){
 
-    ctx.fillStyle="#101010";
+    // ciel
+    ctx.fillStyle="#87c9ff";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillStyle="#333";
+    // sol
+    ctx.fillStyle="#6bbf59";
     ctx.fillRect(0,FLOOR,canvas.width,40);
 
+    // plateformes
+    ctx.fillStyle="#8d6e63";
     platforms.forEach(p=>{
-        ctx.fillStyle="#444";
         ctx.fillRect(p.x,p.y,p.w,p.h);
     });
+
+    // barres de vie
+    ctx.fillStyle="#000";
+    ctx.fillRect(50,30,300,20);
+    ctx.fillRect(550,30,300,20);
+
+    ctx.fillStyle="#4caf50";
+    ctx.fillRect(50,30,300*(player.health/100),20);
+    ctx.fillRect(550,30,300*(enemy.health/100),20);
+
+    // score
+    ctx.fillStyle="#000";
+    ctx.font="20px monospace";
+    ctx.fillText(playerScore + " - " + enemyScore,420,45);
 }
 
 function loop(timestamp){
