@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Simulation – Arène</title>
+
 <style>
 body{
     margin:0;
@@ -27,6 +28,7 @@ canvas{
 }
 </style>
 </head>
+
 <body>
 
 <canvas id="arena" width="900" height="500"></canvas>
@@ -68,16 +70,22 @@ class Fighter{
         this.y = FLOOR;
         this.vx = 0;
         this.vy = 0;
-        this.width = 40;
-        this.height = 40;
+        this.width = 45;
+        this.height = 60;
         this.color = color;
-        this.health = 100;
+
+        this.maxHealth = 150;
+        this.health = this.maxHealth;
+
         this.isAI = isAI;
         this.direction = 1;
         this.onGround = false;
+
         this.attacking = false;
         this.attackTime = 0;
         this.cooldown = 0;
+
+        this.knockback = 0;
     }
 
     reset(){
@@ -85,8 +93,9 @@ class Fighter{
         this.y = FLOOR;
         this.vx = 0;
         this.vy = 0;
-        this.health = 100;
+        this.health = this.maxHealth;
         this.attacking = false;
+        this.knockback = 0;
     }
 
     update(dt, opponent){
@@ -115,6 +124,8 @@ class Fighter{
         });
 
         this.x += this.vx * dt;
+        this.x += this.knockback;
+        this.knockback *= 0.8;
 
         if(this.x < 0) this.x = 0;
         if(this.x > canvas.width - this.width) this.x = canvas.width - this.width;
@@ -130,7 +141,7 @@ class Fighter{
     }
 
     move(dir){
-        this.vx = dir * 300;
+        this.vx = dir * 320;
     }
 
     stop(){
@@ -154,32 +165,50 @@ class Fighter{
 
     draw(){
 
+        const bodyY = this.y - this.height;
+
         // corps
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y-this.height, this.width, this.height);
+        ctx.fillRect(this.x, bodyY, this.width, this.height);
 
-        // visage
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(this.x+10, this.y-30, 5,5);
-        ctx.fillRect(this.x+25, this.y-30, 5,5);
-        ctx.fillRect(this.x+15, this.y-15, 10,3);
+        // tête
+        ctx.fillStyle = "#ffe0b2";
+        ctx.fillRect(this.x+10, bodyY-25, 25, 25);
+
+        // yeux
+        ctx.fillStyle = "#000";
+        ctx.fillRect(this.x+16, bodyY-15, 4,4);
+        ctx.fillRect(this.x+28, bodyY-15, 4,4);
+
+        // bouche
+        ctx.fillRect(this.x+20, bodyY-5, 10,2);
+
+        // bras
+        ctx.fillStyle = this.color;
+        ctx.fillRect(
+            this.direction === 1 ? this.x+this.width-5 : this.x-5,
+            bodyY+10,
+            10,
+            20
+        );
 
         // épée
-        ctx.strokeStyle="#ccc";
+        ctx.strokeStyle="#ddd";
         ctx.lineWidth=4;
 
         if(!this.attacking){
             ctx.beginPath();
-            ctx.moveTo(this.x+20,this.y-this.height-15);
-            ctx.lineTo(this.x+20,this.y-this.height+10);
+            ctx.moveTo(this.x + this.width/2, bodyY-30);
+            ctx.lineTo(this.x + this.width/2, bodyY+10);
             ctx.stroke();
         }else{
-            // mouvement haut -> bas
             const progress = 1 - (this.attackTime/0.25);
             ctx.beginPath();
-            ctx.moveTo(this.x+20,this.y-this.height-15);
-            ctx.lineTo(this.x+20,
-                       this.y-this.height-15 + 40*progress);
+            ctx.moveTo(this.x + this.width/2, bodyY-30);
+            ctx.lineTo(
+                this.x + this.width/2 + this.direction*40*progress,
+                bodyY+20
+            );
             ctx.stroke();
         }
     }
@@ -188,19 +217,19 @@ class Fighter{
         if(!this.attacking) return null;
 
         return {
-            x: this.direction === 1 ? this.x+this.width : this.x-30,
-            y: this.y-40,
-            w: 30,
-            h: 40
+            x: this.direction === 1 ? this.x+this.width : this.x-40,
+            y: this.y-50,
+            w: 40,
+            h: 50
         };
     }
 
     getBody(){
         return {
             x:this.x,
-            y:this.y-this.height,
+            y:this.y-this.height-25,
             w:this.width,
-            h:this.height
+            h:this.height+25
         };
     }
 }
@@ -253,14 +282,16 @@ function combat(){
     const eBody = enemy.getBody();
 
     if(pBox && rect(pBox,eBody)){
-        enemy.health -= 10;
+        enemy.health -= 15;
+        enemy.knockback = player.direction * 6;
     }
 
     const eBox = enemy.getAttackBox();
     const pBody = player.getBody();
 
     if(eBox && rect(eBox,pBody)){
-        player.health -= 5;
+        player.health -= 10;
+        player.knockback = enemy.direction * 6;
     }
 
     if(enemy.health <= 0){
@@ -291,30 +322,25 @@ function nextRound(){
 
 function drawArena(){
 
-    // ciel
     ctx.fillStyle="#87c9ff";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // sol
     ctx.fillStyle="#6bbf59";
     ctx.fillRect(0,FLOOR,canvas.width,40);
 
-    // plateformes
     ctx.fillStyle="#8d6e63";
     platforms.forEach(p=>{
         ctx.fillRect(p.x,p.y,p.w,p.h);
     });
 
-    // barres de vie
     ctx.fillStyle="#000";
     ctx.fillRect(50,30,300,20);
     ctx.fillRect(550,30,300,20);
 
     ctx.fillStyle="#4caf50";
-    ctx.fillRect(50,30,300*(player.health/100),20);
-    ctx.fillRect(550,30,300*(enemy.health/100),20);
+    ctx.fillRect(50,30,300*(player.health/player.maxHealth),20);
+    ctx.fillRect(550,30,300*(enemy.health/enemy.maxHealth),20);
 
-    // score
     ctx.fillStyle="#000";
     ctx.font="20px monospace";
     ctx.fillText(playerScore + " - " + enemyScore,420,45);
