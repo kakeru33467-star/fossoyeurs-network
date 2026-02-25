@@ -2,9 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Module Simulation – Combat 03</title>
+<title>Simulation – Arène</title>
 <link rel="stylesheet" href="style.css">
-
 <style>
 body{
     margin:0;
@@ -13,73 +12,250 @@ body{
     justify-content:center;
     align-items:center;
     height:100vh;
-    font-family:monospace;
-    color:#777;
-}
-
-.sim-container{
-    text-align:center;
 }
 
 canvas{
-    background:#111;
+    background:#151515;
     border:3px solid #7a0000;
-    image-rendering: pixelated;
-}
-
-.hud{
-    width:900px;
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:10px;
-}
-
-.bar{
-    width:350px;
-    height:14px;
-    background:#1a1a1a;
-    border:2px solid #333;
-}
-
-.fill{
-    height:100%;
-    background:#7a0000;
-    width:100%;
-}
-
-.label{
-    font-size:12px;
-    letter-spacing:2px;
-    margin-bottom:4px;
 }
 </style>
 </head>
 <body>
 
-<div class="sim-container">
-
-<div class="hud">
-    <div>
-        <div class="label">AGENT</div>
-        <div class="bar"><div id="playerHP" class="fill"></div></div>
-    </div>
-    <div>
-        <div class="label">CIBLE U.A.</div>
-        <div class="bar"><div id="enemyHP" class="fill"></div></div>
-    </div>
-</div>
-
-<canvas id="game" width="900" height="450"></canvas>
-
-</div>
+<canvas id="arena" width="900" height="500"></canvas>
 
 <audio id="music" src="audio/combat.mp3" loop></audio>
-<audio id="swing" src="audio/swing.mp3"></audio>
-<audio id="hit" src="audio/hit.mp3"></audio>
-<audio id="block" src="audio/block.mp3"></audio>
-<audio id="ko" src="audio/ko.mp3"></audio>
 
-<script src="fighter_engine.js"></script>
+<script>
 
+const canvas = document.getElementById("arena");
+const ctx = canvas.getContext("2d");
+const music = document.getElementById("music");
+
+document.addEventListener("click",()=>{
+    music.volume = 0.4;
+    music.play().catch(()=>{});
+},{once:true});
+
+const GRAVITY = 2000;
+const FLOOR = 450;
+
+class Fighter{
+    constructor(x,color,isAI=false){
+        this.x = x;
+        this.y = FLOOR;
+        this.vx = 0;
+        this.vy = 0;
+        this.width = 40;
+        this.height = 40;
+        this.color = color;
+        this.health = 100;
+        this.isAI = isAI;
+        this.direction = 1;
+        this.onGround = true;
+        this.attacking = false;
+        this.attackCooldown = 0;
+    }
+
+    update(dt, opponent){
+
+        this.direction = this.x < opponent.x ? 1 : -1;
+
+        // Gravité
+        this.vy += GRAVITY * dt;
+        this.y += this.vy * dt;
+
+        if(this.y > FLOOR){
+            this.y = FLOOR;
+            this.vy = 0;
+            this.onGround = true;
+        }
+
+        this.x += this.vx * dt;
+
+        // limites écran
+        if(this.x < 0) this.x = 0;
+        if(this.x > canvas.width - this.width) this.x = canvas.width - this.width;
+
+        if(this.attackCooldown > 0){
+            this.attackCooldown -= dt;
+        }
+    }
+
+    jump(){
+        if(this.onGround){
+            this.vy = -800;
+            this.onGround = false;
+        }
+    }
+
+    attack(){
+        if(this.attackCooldown <= 0){
+            this.attacking = true;
+            this.attackCooldown = 0.5;
+            setTimeout(()=> this.attacking=false,150);
+        }
+    }
+
+    draw(){
+
+        // corps
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y - this.height, this.width, this.height);
+
+        // visage
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(this.x+10, this.y-30, 5,5);
+        ctx.fillRect(this.x+25, this.y-30, 5,5);
+        ctx.fillRect(this.x+15, this.y-15, 10,3);
+
+        // épée
+        if(this.attacking){
+            ctx.fillStyle="#ccc";
+            if(this.direction === 1){
+                ctx.fillRect(this.x+this.width, this.y-25, 30, 5);
+            }else{
+                ctx.fillRect(this.x-30, this.y-25, 30, 5);
+            }
+        }
+    }
+
+    getAttackBox(){
+        if(!this.attacking) return null;
+
+        if(this.direction === 1){
+            return {
+                x: this.x+this.width,
+                y: this.y-30,
+                width: 30,
+                height: 20
+            };
+        }else{
+            return {
+                x: this.x-30,
+                y: this.y-30,
+                width: 30,
+                height: 20
+            };
+        }
+    }
+
+    getBody(){
+        return {
+            x: this.x,
+            y: this.y-this.height,
+            width: this.width,
+            height: this.height
+        };
+    }
+}
+
+const player = new Fighter(150,"#e6e6e6");
+const enemy = new Fighter(650,"#7a0000",true);
+
+let keys = {};
+let lastTime = 0;
+
+document.addEventListener("keydown",e=>{
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === " ") player.attack();
+});
+
+document.addEventListener("keyup",e=>{
+    keys[e.key.toLowerCase()] = false;
+});
+
+function rectsIntersect(a,b){
+    return(
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+    );
+}
+
+function handleInput(){
+    player.vx = 0;
+    if(keys["q"]) player.vx = -300;
+    if(keys["d"]) player.vx = 300;
+    if(keys["z"]) player.jump();
+}
+
+function enemyAI(){
+    const distance = Math.abs(enemy.x - player.x);
+
+    if(distance > 100){
+        enemy.vx = enemy.direction * -200;
+    }else{
+        enemy.vx = 0;
+        if(Math.random() < 0.02){
+            enemy.attack();
+        }
+    }
+}
+
+function handleCombat(){
+
+    const pBox = player.getAttackBox();
+    const eBody = enemy.getBody();
+
+    if(pBox && rectsIntersect(pBox,eBody)){
+        enemy.health -= 10;
+    }
+
+    const eBox = enemy.getAttackBox();
+    const pBody = player.getBody();
+
+    if(eBox && rectsIntersect(eBox,pBody)){
+        player.health -= 5;
+    }
+
+    if(enemy.health <= 0){
+        alert("Simulation réussie.");
+        window.location.href="dashboard.html";
+    }
+
+    if(player.health <= 0){
+        alert("Échec.");
+        window.location.href="dashboard.html";
+    }
+}
+
+function drawPlatforms(){
+    ctx.fillStyle="#333";
+    ctx.fillRect(300,380,120,20);
+    ctx.fillRect(500,330,120,20);
+}
+
+function gameLoop(timestamp){
+
+    const dt = (timestamp - lastTime)/1000;
+    lastTime = timestamp;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // fond
+    ctx.fillStyle="#101010";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    drawPlatforms();
+
+    handleInput();
+    enemyAI();
+
+    player.update(dt,enemy);
+    enemy.update(dt,player);
+
+    handleCombat();
+
+    player.draw();
+    enemy.draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+requestAnimationFrame(gameLoop);
+
+</script>
 </body>
 </html>
