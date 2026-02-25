@@ -3,26 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <title>Simulation – Arène</title>
-<link rel="stylesheet" href="style.css">
 <style>
 body{
     margin:0;
     background:#0b0b0b;
     display:flex;
+    flex-direction:column;
     justify-content:center;
     align-items:center;
     height:100vh;
+    font-family:monospace;
+    color:#aaa;
 }
 
 canvas{
     background:#151515;
     border:3px solid #7a0000;
 }
+
+.controls{
+    margin-top:10px;
+    font-size:14px;
+}
 </style>
 </head>
 <body>
 
 <canvas id="arena" width="900" height="500"></canvas>
+
+<div class="controls">
+Déplacement : Q / D — Saut : Z — Attaque : E
+</div>
 
 <audio id="music" src="audio/combat.mp3" loop></audio>
 
@@ -38,7 +49,14 @@ document.addEventListener("click",()=>{
 },{once:true});
 
 const GRAVITY = 2000;
-const FLOOR = 450;
+const FLOOR = 460;
+
+const platforms = [
+    {x:200,y:420,w:120,h:15},
+    {x:400,y:360,w:150,h:15},
+    {x:650,y:300,w:120,h:15},
+    {x:100,y:300,w:120,h:15}
+];
 
 class Fighter{
     constructor(x,color,isAI=false){
@@ -52,48 +70,74 @@ class Fighter{
         this.health = 100;
         this.isAI = isAI;
         this.direction = 1;
-        this.onGround = true;
+        this.onGround = false;
         this.attacking = false;
-        this.attackCooldown = 0;
+        this.attackTime = 0;
+        this.cooldown = 0;
     }
 
     update(dt, opponent){
 
         this.direction = this.x < opponent.x ? 1 : -1;
 
-        // Gravité
         this.vy += GRAVITY * dt;
         this.y += this.vy * dt;
 
+        // collision sol
         if(this.y > FLOOR){
             this.y = FLOOR;
             this.vy = 0;
             this.onGround = true;
         }
 
+        // collision plateformes
+        platforms.forEach(p=>{
+            if(this.x+this.width > p.x &&
+               this.x < p.x+p.w &&
+               this.y >= p.y &&
+               this.y <= p.y+20 &&
+               this.vy >= 0){
+                   this.y = p.y;
+                   this.vy = 0;
+                   this.onGround = true;
+            }
+        });
+
         this.x += this.vx * dt;
 
-        // limites écran
         if(this.x < 0) this.x = 0;
         if(this.x > canvas.width - this.width) this.x = canvas.width - this.width;
 
-        if(this.attackCooldown > 0){
-            this.attackCooldown -= dt;
+        if(this.cooldown > 0) this.cooldown -= dt;
+
+        if(this.attacking){
+            this.attackTime -= dt;
+            if(this.attackTime <= 0){
+                this.attacking = false;
+            }
         }
+    }
+
+    move(dir){
+        this.vx = dir * 300;
+    }
+
+    stop(){
+        this.vx = 0;
     }
 
     jump(){
         if(this.onGround){
-            this.vy = -800;
+            this.vy = -850;
             this.onGround = false;
         }
     }
 
     attack(){
-        if(this.attackCooldown <= 0){
+        if(this.cooldown <= 0){
             this.attacking = true;
-            this.attackCooldown = 0.5;
-            setTimeout(()=> this.attacking=false,150);
+            this.attackTime = 0.25;
+            this.cooldown = 0.6;
         }
     }
 
@@ -101,7 +145,7 @@ class Fighter{
 
         // corps
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y - this.height, this.width, this.height);
+        ctx.fillRect(this.x, this.y-this.height, this.width, this.height);
 
         // visage
         ctx.fillStyle = "#fff";
@@ -109,104 +153,107 @@ class Fighter{
         ctx.fillRect(this.x+25, this.y-30, 5,5);
         ctx.fillRect(this.x+15, this.y-15, 10,3);
 
-        // épée
-        if(this.attacking){
-            ctx.fillStyle="#ccc";
-            if(this.direction === 1){
-                ctx.fillRect(this.x+this.width, this.y-25, 30, 5);
-            }else{
-                ctx.fillRect(this.x-30, this.y-25, 30, 5);
-            }
+        // épée posée
+        ctx.strokeStyle="#ccc";
+        ctx.lineWidth=4;
+
+        if(!this.attacking){
+            // épée verticale
+            ctx.beginPath();
+            ctx.moveTo(this.x+20,this.y-this.height-10);
+            ctx.lineTo(this.x+20,this.y-this.height+20);
+            ctx.stroke();
+        }else{
+            // animation coup haut -> bas
+            const swing = 40 * (1 - this.attackTime/0.25);
+            ctx.beginPath();
+            ctx.moveTo(this.x+20,this.y-this.height-10);
+            ctx.lineTo(this.x+20 + this.direction*swing,
+                       this.y-this.height+20);
+            ctx.stroke();
         }
     }
 
     getAttackBox(){
         if(!this.attacking) return null;
 
-        if(this.direction === 1){
-            return {
-                x: this.x+this.width,
-                y: this.y-30,
-                width: 30,
-                height: 20
-            };
-        }else{
-            return {
-                x: this.x-30,
-                y: this.y-30,
-                width: 30,
-                height: 20
-            };
-        }
+        return {
+            x: this.direction === 1 ? this.x+this.width : this.x-30,
+            y: this.y-40,
+            w: 30,
+            h: 40
+        };
     }
 
     getBody(){
         return {
-            x: this.x,
-            y: this.y-this.height,
-            width: this.width,
-            height: this.height
+            x:this.x,
+            y:this.y-this.height,
+            w:this.width,
+            h:this.height
         };
     }
 }
 
 const player = new Fighter(150,"#e6e6e6");
-const enemy = new Fighter(650,"#7a0000",true);
+const enemy = new Fighter(700,"#7a0000",true);
 
 let keys = {};
 let lastTime = 0;
 
 document.addEventListener("keydown",e=>{
     keys[e.key.toLowerCase()] = true;
-    if(e.key === " ") player.attack();
+    if(e.key === "e") player.attack();
 });
 
 document.addEventListener("keyup",e=>{
     keys[e.key.toLowerCase()] = false;
 });
 
-function rectsIntersect(a,b){
-    return(
-        a.x < b.x + b.width &&
-        a.x + a.width > b.x &&
-        a.y < b.y + b.height &&
-        a.y + a.height > b.y
-    );
+function rect(a,b){
+    return a.x < b.x+b.w &&
+           a.x+a.w > b.x &&
+           a.y < b.y+b.h &&
+           a.y+a.h > b.y;
 }
 
 function handleInput(){
-    player.vx = 0;
-    if(keys["q"]) player.vx = -300;
-    if(keys["d"]) player.vx = 300;
+    player.stop();
+    if(keys["q"]) player.move(-1);
+    if(keys["d"]) player.move(1);
     if(keys["z"]) player.jump();
 }
 
 function enemyAI(){
-    const distance = Math.abs(enemy.x - player.x);
+    const dist = enemy.x - player.x;
 
-    if(distance > 100){
-        enemy.vx = enemy.direction * -200;
+    if(Math.abs(dist) > 80){
+        enemy.move(dist > 0 ? -1 : 1);
     }else{
-        enemy.vx = 0;
+        enemy.stop();
         if(Math.random() < 0.02){
             enemy.attack();
         }
     }
+
+    if(Math.random() < 0.005){
+        enemy.jump();
+    }
 }
 
-function handleCombat(){
+function combat(){
 
     const pBox = player.getAttackBox();
     const eBody = enemy.getBody();
 
-    if(pBox && rectsIntersect(pBox,eBody)){
+    if(pBox && rect(pBox,eBody)){
         enemy.health -= 10;
     }
 
     const eBox = enemy.getAttackBox();
     const pBody = player.getBody();
 
-    if(eBox && rectsIntersect(eBox,pBody)){
+    if(eBox && rect(eBox,pBody)){
         player.health -= 5;
     }
 
@@ -221,24 +268,28 @@ function handleCombat(){
     }
 }
 
-function drawPlatforms(){
+function drawArena(){
+
+    ctx.fillStyle="#101010";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
     ctx.fillStyle="#333";
-    ctx.fillRect(300,380,120,20);
-    ctx.fillRect(500,330,120,20);
+    ctx.fillRect(0,FLOOR,canvas.width,40);
+
+    platforms.forEach(p=>{
+        ctx.fillStyle="#444";
+        ctx.fillRect(p.x,p.y,p.w,p.h);
+    });
 }
 
-function gameLoop(timestamp){
+function loop(timestamp){
 
     const dt = (timestamp - lastTime)/1000;
     lastTime = timestamp;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // fond
-    ctx.fillStyle="#101010";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    drawPlatforms();
+    drawArena();
 
     handleInput();
     enemyAI();
@@ -246,15 +297,15 @@ function gameLoop(timestamp){
     player.update(dt,enemy);
     enemy.update(dt,player);
 
-    handleCombat();
+    combat();
 
     player.draw();
     enemy.draw();
 
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(loop);
 }
 
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(loop);
 
 </script>
 </body>
