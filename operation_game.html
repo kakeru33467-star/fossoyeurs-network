@@ -292,9 +292,10 @@ const enemy = new Fighter(700,"#ff4d4d",true);
 let keys = {};
 let lastTime = 0;
 
-document.addEventListener("keydown",e=>{
-    keys[e.key.toLowerCase()] = true;
-    if(e.key === "e") player.attack();
+document.addEventListener("mousedown", e=>{
+    if(e.button === 0){ // clic gauche
+        player.attack();
+    }
 });
 
 document.addEventListener("keyup",e=>{
@@ -312,7 +313,7 @@ function handleInput(){
     player.stop();
     if(keys["q"]) player.move(-1);
     if(keys["d"]) player.move(1);
-    if(keys["z"]) player.jump();
+    if(keys["z"] || keys[" "]) player.jump();
 }
 
 function enemyAI(){
