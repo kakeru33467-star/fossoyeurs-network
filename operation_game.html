@@ -292,6 +292,10 @@ const enemy = new Fighter(700,"#ff4d4d",true);
 let keys = {};
 let lastTime = 0;
 
+document.addEventListener("keydown",e=>{
+    keys[e.key.toLowerCase()] = true;
+});
+    
 document.addEventListener("mousedown", e=>{
     if(e.button === 0){ // clic gauche
         player.attack();
